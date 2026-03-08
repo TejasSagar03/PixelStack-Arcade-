@@ -1,23 +1,22 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment'; 
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000'; 
+  
+  private baseUrl = environment.apiUrl; 
 
   currentUser = signal<any>(null);
 
-  // --- NEW AUTH METHODS ---
-
   async signup(userData: any) {
-    const response = await firstValueFrom(
+    return await firstValueFrom(
       this.http.post(`${this.baseUrl}/auth/signup`, userData)
     );
-    return response;
   }
 
   async login(identifier: string, password: any) {
