@@ -78,6 +78,9 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--card-shadow);
   margin-bottom: 2rem;
+  
+  /* ADDED FOR MOBILE SWIPE SUPPORT */
+  touch-action: none; 
 }
 
 .board {
@@ -174,17 +177,16 @@
 /* --- SIDE-BY-SIDE LAYOUT --- */
 .layout-wrapper {
   display: flex;
-  flex-direction: column; /* Stacks them on mobile phones */
+  flex-direction: column; 
   align-items: center;
   gap: 2rem;
   margin-top: 1.5rem;
 
-  /* On screens wider than 900px, put them side-by-side! */
   @media (min-width: 900px) {
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
-    gap: 4rem; /* Adds nice spacing between the board and the leaderboard */
+    gap: 4rem; 
   }
 }
 

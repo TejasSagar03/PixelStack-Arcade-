@@ -27,6 +27,12 @@ export class Game2048Component {
   keepPlaying = signal<boolean>(false); 
   gameOver = signal<boolean>(false);
 
+  // Touch tracking variables for mobile swipe
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private touchEndX = 0;
+  private touchEndY = 0;
+
   constructor() {
     this.initGame();
   }
@@ -64,6 +70,53 @@ export class Game2048Component {
       this.checkGameState();
     }
   }
+
+  // --- MOBILE SWIPE SUPPORT START ---
+
+  @HostListener('touchstart', ['$event'])
+  handleTouchStart(event: TouchEvent) {
+    this.touchStartX = event.changedTouches[0].screenX;
+    this.touchStartY = event.changedTouches[0].screenY;
+  }
+
+  @HostListener('touchend', ['$event'])
+  handleTouchEnd(event: TouchEvent) {
+    this.touchEndX = event.changedTouches[0].screenX;
+    this.touchEndY = event.changedTouches[0].screenY;
+    this.handleSwipe();
+  }
+
+  private handleSwipe() {
+    if (this.gameOver() || (this.hasWon() && !this.keepPlaying())) return;
+
+    const deltaX = this.touchEndX - this.touchStartX;
+    const deltaY = this.touchEndY - this.touchStartY;
+    const minSwipeDistance = 30; // Minimum pixels to count as a swipe
+
+    if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
+      return; 
+    }
+
+    let moved = false;
+    const currentGrid = this.grid();
+    const currentScore = this.score();
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 0) moved = this.move('RIGHT');
+      else moved = this.move('LEFT');
+    } else {
+      if (deltaY > 0) moved = this.move('DOWN');
+      else moved = this.move('UP');
+    }
+
+    if (moved) {
+      this.history.update(h => [...h, { grid: this.cloneGrid(currentGrid), score: currentScore }]);
+      this.addRandomTile();
+      this.checkGameState();
+    }
+  }
+
+  // --- MOBILE SWIPE SUPPORT END ---
 
   undo() {
     const hist = this.history();
@@ -172,7 +225,7 @@ export class Game2048Component {
       if (!canMove) {
         this.gameOver.set(true);
         this.triggerHaptic([100, 50, 100]);
-        this.saveFinalScore(); // <-- Trigger the database save here!
+        this.saveFinalScore(); 
       }
     }
   }
