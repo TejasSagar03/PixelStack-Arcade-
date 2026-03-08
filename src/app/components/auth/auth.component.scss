@@ -1,0 +1,308 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+.arcade-font {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+:host {
+  display: block;
+  --accent-color: #10b981;
+}
+
+.ea-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary, #0f172a);
+  color: var(--text-primary, #ffffff);
+  overflow-x: hidden;
+  transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- NAVIGATION & BRANDING --- */
+.ea-nav {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  padding: 1.5rem 3rem; 
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(20px); 
+  backdrop-filter: blur(20px); 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky; 
+  top: 0; 
+  z-index: 100;
+
+  .nav-brand { 
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+}
+
+/* Logo specific styles to fix yellow linter warnings */
+.ps-logo {
+  width: 30px;
+  height: auto;
+  overflow: visible;
+
+  .ps-graphic {
+    fill: none;
+    stroke: white;
+    stroke-width: 4;
+    transition: stroke 0.3s ease;
+  }
+}
+
+.brand-text {
+  font-size: 1.5rem; 
+  color: white;
+}
+
+.auth-btn {
+  background: transparent; 
+  border: 2px solid #fff; 
+  color: #fff;
+  padding: 0.6rem 1.5rem; 
+  cursor: pointer; 
+  transform: skewX(-10deg);
+  text-decoration: none; 
+  font-weight: bold;
+  transition: all 0.3s ease;
+
+  &:hover { 
+    background: #fff; 
+    color: #000; 
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
+  }
+}
+
+/* --- HERO SECTION --- */
+.ea-hero {
+  position: relative; 
+  height: 40vh; 
+  display: flex; 
+  align-items: center;
+  padding: 0 5rem; 
+  background: radial-gradient(circle at left, #1e3a8a 0%, #000000 100%);
+  
+  .hero-content {
+    z-index: 2;
+    .hero-title {
+      font-size: 5rem; 
+      margin: 0; 
+      line-height: 0.9;
+      background: linear-gradient(to bottom right, #ffffff, #6b7280);
+      -webkit-background-clip: text; 
+      background-clip: text; 
+      color: transparent; 
+      transform: skewX(-5deg);
+    }
+    .hero-subtitle { 
+      font-size: 1.2rem; 
+      color: #3b82f6; 
+      margin-top: 1rem; 
+      font-weight: bold; 
+    }
+  }
+  
+  .hero-slant-overlay {
+    position: absolute; 
+    bottom: -2px; 
+    left: 0; 
+    width: 100%; 
+    height: 100px;
+    background: var(--bg-primary, #0f172a); 
+    clip-path: polygon(0 100%, 100% 100%, 100% 0);
+    transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* --- AUTH CARD & FORM --- */
+.ea-auth-section {
+  padding: 2rem 5rem 6rem;
+  display: flex; 
+  justify-content: center;
+}
+
+.nfs-auth-card {
+  width: 100%; 
+  max-width: 500px;
+  position: relative;
+  transform: skewX(-6deg);
+  background: linear-gradient(135deg, #0f172a, #2563eb);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+
+  .auth-form-inner, .modal-inner {
+    background: rgba(10, 10, 10, 0.95);
+    padding: 3rem;
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem;
+  }
+}
+
+.input-group {
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.5rem; 
+  transform: skewX(6deg);
+  
+  label { 
+    font-size: 0.8rem; 
+    color: #3b82f6; 
+    font-weight: bold; 
+  }
+  
+  input {
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 1rem; 
+    color: #fff; 
+    font-family: inherit; 
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &:focus { 
+      outline: none; 
+      border-color: #3b82f6; 
+      background: rgba(59,130,246,0.1); 
+    }
+  }
+}
+
+.play-action {
+  background: #fff; 
+  color: #000; 
+  border: none; 
+  padding: 1.2rem;
+  font-size: 1.2rem; 
+  cursor: pointer; 
+  transform: skewX(6deg);
+  transition: all 0.2s ease; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  gap: 10px;
+  margin-top: 1rem; 
+  font-weight: 900;
+  
+  &:hover:not(:disabled) { 
+    transform: skewX(6deg) scale(1.02); 
+    box-shadow: 0 0 20px rgba(255,255,255,0.4); 
+  }
+
+  &:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+}
+
+/* Success Modal Styles */
+.success-title {
+  font-size: 3rem; 
+  margin-bottom: 1rem; 
+  color: #10b981;
+}
+
+.success-message {
+  color: #9ca3af; 
+  margin-bottom: 2rem; 
+  font-size: 1.2rem;
+}
+
+.full-width-btn {
+  width: 100%;
+}
+
+.toggle-container {
+  text-align: center; 
+  margin-top: 1rem; 
+  transform: skewX(6deg); 
+  color: #9ca3af;
+
+  .toggle-link { 
+    color: #3b82f6; 
+    cursor: pointer; 
+    margin-left: 8px; 
+    font-weight: bold; 
+    
+    &:hover { color: #fff; } 
+  }
+}
+
+.spinner {
+  width: 18px; 
+  height: 18px; 
+  border: 3px solid rgba(0,0,0,0.1); 
+  border-top-color: #000;
+  border-radius: 50%; 
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { 
+  to { transform: rotate(360deg); } 
+}
+
+.modal-backdrop {
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.8); 
+  -webkit-backdrop-filter: blur(10px); 
+  backdrop-filter: blur(10px);
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+}
+
+.modal-content { 
+  transform: skewX(-6deg); 
+  background: linear-gradient(135deg, #064e3b, #10b981); 
+}
+
+.modal-inner { 
+  transform: skewX(0); 
+  h2, p { transform: skewX(6deg); }
+}
+
+/* --- LIGHT THEME OVERRIDES --- */
+:host-context(body.light-theme) {
+  --bg-primary: #f3f4f6;
+  --text-primary: #111827;
+  
+  .ea-nav { 
+    background: rgba(255, 255, 255, 0.9); 
+    border-bottom-color: rgba(0,0,0,0.1); 
+  }
+
+  .nav-brand {
+    .brand-text { color: #000; }
+    .ps-logo .ps-graphic { stroke: rgba(0, 0, 0, 0.6); }
+  }
+
+  .auth-btn { 
+    border-color: #000; 
+    color: #000; 
+    &:hover { background: #000; color: #fff; } 
+  }
+
+  .hero-slant-overlay { 
+    background: var(--bg-primary); 
+  }
+
+  .nfs-auth-card .auth-form-inner, 
+  .nfs-auth-card .modal-inner { 
+    background: rgba(255, 255, 255, 0.95); 
+  }
+
+  .input-group input { 
+    background: rgba(0,0,0,0.05); 
+    border-color: rgba(0,0,0,0.2); 
+    color: #000; 
+  }
+}

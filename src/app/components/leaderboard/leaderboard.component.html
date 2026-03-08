@@ -1,0 +1,21 @@
+<div class="leaderboard-container">
+  <h2>🏆 Top 10</h2>
+  
+  <div *ngIf="isLoading()" class="loading">Loading scores...</div>
+  
+  <div *ngIf="!isLoading() && leaderboardData().length === 0" class="empty">
+    No scores yet. Be the first!
+  </div>
+
+  <ul *ngIf="!isLoading() && leaderboardData().length > 0" class="score-list">
+    <li *ngFor="let entry of leaderboardData(); let i = index" 
+        class="score-item" 
+        [class.top-three]="i < 3">
+      
+      <span class="rank">#{{ i + 1 }}</span>
+      <span class="username">{{ entry.user?.username || 'Unknown' }}</span>
+      <span class="score">{{ entry.value }}</span>
+      
+    </li>
+  </ul>
+</div>

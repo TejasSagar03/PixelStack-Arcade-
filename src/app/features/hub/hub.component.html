@@ -1,0 +1,114 @@
+<div class="ea-layout">
+  <nav class="ea-nav">
+    <div class="nav-brand" (click)="router.navigate(['/'])">
+      <svg class="ps-logo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+        <path class="ps-graphic" d="M10 20 H70 V50 H10 V20 Z M20 50 H80 V80 H20 V50 Z M30 80 H90 V110 H30 V110 Z" />
+        <path class="ps-accent" d="M10 20 V110 H25 V50 H70 V20 H10 Z" />
+      </svg>
+      <span class="arcade-font brand-text">PIXELSTACK</span>
+    </div>
+
+    <div class="nav-controls">
+      <div class="nfs-toggle" (click)="toggleTheme()" [class.active]="!isDarkMode()">
+        <div class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="arcade-font toggle-label">{{ isDarkMode() ? 'DARK' : 'LIGHT' }}</span>
+      </div>
+
+      @if (!currentUser()) {
+        <button class="nfs-nav-btn arcade-font" routerLink="/auth">
+          <span class="btn-icon">➔</span> LOGIN
+        </button>
+      } @else {
+        <div class="user-profile clickable" (click)="toggleProfile()">
+          <span class="welcome-text">{{ currentUser().username | uppercase }}</span>
+          <div class="avatar-mini arcade-font">
+            {{ currentUser().username.charAt(0) | uppercase }}
+          </div>
+        </div>
+      }
+    </div>
+  </nav>
+
+  <header class="ea-hero">
+    <div class="hero-content">
+      <h1 class="hero-title">DEFY THE LIMITS.</h1>
+      <p class="hero-subtitle">Secure your profile. Dominate the global leaderboards.</p>
+    </div>
+    <div class="hero-slant-overlay"></div>
+  </header>
+
+  <main class="ea-games-section">
+    <h2 class="section-heading arcade-font">LATEST MODULES</h2>
+    
+    <div class="nfs-grid" [@listAnimation]="games.length">
+      @for (game of games; track game.title) {
+        <div class="nfs-card" [ngClass]="game.bgClass" (click)="playGame(game.route)">
+          <div class="watermark-graphic arcade-font">{{ game.watermark }}</div>
+
+          <div class="card-inner">
+            <div class="game-tags">
+              @for (tag of game.tags; track tag) {
+                <span class="tag arcade-font">{{ tag }}</span>
+              }
+            </div>
+            
+            <h2 class="arcade-font">{{ game.title }}</h2>
+            <p class="game-info">{{ game.info }}</p>
+            
+            <div class="play-action arcade-font">
+              {{ currentUser() ? 'PLAY NOW ➔' : 'LOGIN TO PLAY' }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+</div>
+
+@if (showProfileModal() && currentUser()) {
+  <div class="modal-backdrop" (click)="toggleProfile()">
+    <div class="profile-card" (click)="$event.stopPropagation()">
+      <div class="card-inner">
+        <button class="close-btn arcade-font" (click)="toggleProfile()">X</button>
+        
+        <div class="profile-header">
+          <div class="avatar-large">
+            <svg class="profile-avatar-logo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 20 H70 V50 H10 V20 Z M20 50 H80 V80 H20 V50 Z M30 80 H90 V110 H30 V110 Z" fill="#10b981" />
+            </svg>
+          </div>
+          <h2 class="arcade-font">{{ currentUser().username }}</h2>
+          <p class="role-badge">VERIFIED PLAYER</p>
+        </div>
+        
+        <div class="profile-details">
+          <div class="detail-row">
+            <span class="label arcade-font">NAME:</span>
+            <span class="value">{{ currentUser().name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label arcade-font">COMMLINK:</span>
+            <span class="value">{{ currentUser().email }}</span>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-num arcade-font">3</span>
+              <span class="stat-label arcade-font">MODULES</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num arcade-font">0</span>
+              <span class="stat-label arcade-font">GAMES PLAYED</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="logout-btn arcade-font" (click)="logout()">
+          DISCONNECT (LOGOUT) <br> ➔
+        </button>
+      </div>
+    </div>
+  </div>
+}

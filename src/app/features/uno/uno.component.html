@@ -1,0 +1,111 @@
+<main class="uno-container" [class]="'theme-' + activeColor()">
+  <div class="aura-bg"></div>
+  
+  <header class="game-header">
+    <a class="back-btn arcade-font" routerLink="/">⬅ HUB</a>
+    <h1 class="title arcade-font">PixelUNO</h1>
+  </header>
+
+  @if (!mode()) {
+    <div class="menu-overlay">
+      <div class="glass-modal">
+        <h2 class="arcade-font">Start Match</h2>
+        <div class="mode-options">
+          <button class="primary-btn arcade-font" (click)="startGame('1v1_AI')">1 VS 1 (AI)</button>
+          <button class="primary-btn arcade-font" (click)="startGame('2v2_AI')">2 VS 2 (TEAM AI)</button>
+          <button class="primary-btn arcade-font" (click)="startGame('Local_PassPlay')">LOCAL PASS & PLAY</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (mode()) {
+    <div class="opponents-area">
+      @for (player of players(); track player.id) {
+        @if (player.id !== turnIndex() || player.isAI) {
+          <div class="mini-hand" [class.active-turn]="turnIndex() === player.id">
+            <h3 class="arcade-font">{{ player.name }} ({{ player.hand.length }})</h3>
+            <div class="card-backs">
+              @for (card of player.hand.slice(0, 3); track $index) {
+                <div class="uno-card card-back mini"></div>
+              }
+              @if (player.hand.length > 3) { <span class="more-cards">+{{ player.hand.length - 3 }}</span> }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="glass-table">
+      <div class="direction-indicator" [class.ccw]="playDirection() === -1">
+        <span class="arcade-font">DIRECTION {{ playDirection() === 1 ? '↻' : '↺' }}</span>
+      </div>
+
+      <div class="center-table">
+        <div class="deck-pile" (click)="drawFromDeck(turnIndex())" [class.disabled]="players()[turnIndex()].isAI || winner() || awaitingColorChoice()">
+          <div class="uno-card card-back draw-pile">
+            <div class="draw-label arcade-font">DRAW</div>
+          </div>
+        </div>
+
+        <div class="discard-pile" [class.slam-anim]="specialAnimation() !== null">
+          @if (discardPile().length > 0) {
+            <div class="uno-card" 
+                 [class]="discardPile()[discardPile().length - 1].color"
+                 [class.wild-special]="discardPile()[discardPile().length - 1].color === 'wild'"
+                 [class.special-glow]="discardPile()[discardPile().length - 1].isSpecial">
+              <span class="corner top-left">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
+              <div class="oval">
+                <span class="center-val">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
+              </div>
+              <span class="corner bottom-right">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="player-area">
+      <h2 class="turn-text arcade-font" [class.is-my-turn]="!players()[turnIndex()].isAI">
+        {{ players()[turnIndex()].isAI ? 'AI is Thinking...' : 'Your Turn!' }}
+      </h2>
+      
+      <div class="hand">
+        @for (card of players()[0].hand; track card.id) {
+          <div class="uno-card playable-card"
+               [class]="card.color"
+               [class.valid]="isValidPlay(card) && turnIndex() === 0 && !winner()"
+               (click)="playCard(0, card)">
+            <span class="corner top-left">{{ getSymbol(card.value) }}</span>
+            <div class="oval"><span class="center-val">{{ getSymbol(card.value) }}</span></div>
+            <span class="corner bottom-right">{{ getSymbol(card.value) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (awaitingColorChoice()) {
+      <div class="color-picker-overlay">
+        <div class="glass-modal color-modal">
+          <h2 class="arcade-font">Pick Color</h2>
+          <div class="color-options">
+            <button class="color-btn red" (click)="selectColor('red')"></button>
+            <button class="color-btn blue" (click)="selectColor('blue')"></button>
+            <button class="color-btn green" (click)="selectColor('green')"></button>
+            <button class="color-btn yellow" (click)="selectColor('yellow')"></button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (winner()) {
+      <div class="winner-overlay">
+        <div class="glass-modal win-modal">
+          <h1 class="arcade-font win-announcement">{{ winner() }}</h1>
+          <button class="primary-btn arcade-font" (click)="mode.set(null)">PLAY AGAIN</button>
+          <a class="secondary-btn arcade-font" routerLink="/">GO HOME</a>
+        </div>
+      </div>
+    }
+  }
+</main>

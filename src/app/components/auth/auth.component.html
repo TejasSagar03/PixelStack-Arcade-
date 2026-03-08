@@ -1,0 +1,85 @@
+<div class="ea-layout">
+  <nav class="ea-nav">
+  <div class="nav-brand" routerLink="/">
+    <svg class="ps-logo auth-logo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+      <path class="ps-graphic" d="M10 20 H70 V50 H10 V20 Z M20 50 H80 V80 H20 V50 Z M30 80 H90 V110 H30 V110 Z" stroke="white" fill="none" stroke-width="4"/>
+      <path d="M10 20 V110 H25 V50 H70 V20 H10 Z" fill="#10b981"/>
+    </svg>
+    <span class="arcade-font brand-text">PIXELSTACK</span>
+  </div>
+  <div class="nav-controls">
+    <button class="auth-btn arcade-font" routerLink="/">⬅ HUB</button>
+  </div>
+</nav>
+
+  <header class="ea-hero">
+    <div class="hero-content">
+      <h1 class="hero-title arcade-font">{{ isLoginMode() ? 'DRIVER LOGIN' : 'NEW PROFILE' }}</h1>
+      <p class="hero-subtitle">{{ isLoginMode() ? 'Welcome back. The grid is waiting.' : 'Register your credentials.' }}</p>
+    </div>
+    <div class="hero-slant-overlay"></div>
+  </header>
+
+  <main class="ea-auth-section">
+    <div class="nfs-auth-card">
+      <form (ngSubmit)="handleSubmit()" #authForm="ngForm" class="auth-form-inner">
+        
+        @if (!isLoginMode()) {
+          <div class="input-group">
+            <label class="arcade-font">FULL NAME</label>
+            <input type="text" name="name" [(ngModel)]="authData.name" placeholder="Enter your name" required>
+          </div>
+          <div class="input-group">
+            <label class="arcade-font">GMAIL ID</label>
+            <input type="email" name="email" [(ngModel)]="authData.email" placeholder="example@gmail.com" required>
+          </div>
+        }
+
+        <div class="input-group">
+          <label class="arcade-font">{{ isLoginMode() ? 'USERNAME OR EMAIL' : 'USERNAME' }}</label>
+          @if (isLoginMode()) {
+            <input type="text" name="identifier" [(ngModel)]="authData.identifier" placeholder="Username or Email" required>
+          } @else {
+            <input type="text" name="username" [(ngModel)]="authData.username" placeholder="Pick a cool username" required>
+          }
+        </div>
+
+        <div class="input-group">
+          <label class="arcade-font">PASSWORD</label>
+          <input type="password" name="password" [(ngModel)]="authData.password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="play-action arcade-font" [disabled]="isLoading() || !authForm.valid">
+          @if (isLoading()) {
+            <span class="spinner"></span> PROCESSING...
+          } @else {
+            {{ isLoginMode() ? 'INITIALIZE ➔' : 'REGISTER ➔' }}
+          }
+        </button>
+
+        <div class="toggle-container">
+          <p>
+            {{ isLoginMode() ? "NO PROFILE YET?" : "ALREADY REGISTERED?" }}
+            <span (click)="toggleMode()" class="toggle-link arcade-font">
+              {{ isLoginMode() ? 'SIGN UP' : 'LOGIN' }}
+            </span>
+          </p>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+@if (showSuccessModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-content nfs-auth-card">
+      <div class="modal-inner">
+        <h2 class="arcade-font success-title">PROFILE SECURED</h2>
+        <p class="success-message">Your credentials are locked in. Let's hit the grid.</p>
+        <button class="play-action arcade-font full-width-btn" (click)="closeModalAndLogin()">
+          PROCEED TO LOGIN
+        </button>
+      </div>
+    </div>
+  </div>
+}

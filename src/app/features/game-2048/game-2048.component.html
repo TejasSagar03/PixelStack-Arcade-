@@ -1,0 +1,73 @@
+<main class="game-container">
+  <header class="game-header">
+    <a class="back-btn arcade-font" routerLink="/">⬅ HUB</a>
+    
+    <div class="score-container">
+      <div class="score-box">
+        <span class="label">SCORE</span>
+        <span class="value">{{ score() }}</span>
+      </div>
+      <button class="undo-btn arcade-font" (click)="undo()" [disabled]="history().length === 0">
+        ↩ UNDO
+      </button>
+    </div>
+  </header>
+
+  <div class="header-text">
+    <h1 class="title">2048</h1>
+    <p class="subtitle">Join the numbers and get to the <strong>2048</strong> tile!</p>
+  </div>
+
+  <div class="layout-wrapper">
+    
+    <div class="game-section">
+      <div class="board-wrapper">
+        <div class="board">
+          @for (row of grid(); track $index) {
+            @for (cell of row; track $index) {
+              <div class="cell-bg">
+                @if (cell !== 0) {
+                  <div class="tile new-tile" 
+                       [ngStyle]="{'background-color': getTileColor(cell), 'color': getTextColor(cell)}">
+                    {{ cell }}
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        @if (hasWon() && !keepPlaying()) {
+          <div class="overlay win-overlay">
+            <h2>You Win! 🎉</h2>
+            <p>You reached 2048.</p>
+            <div class="overlay-actions">
+              <button class="primary-btn arcade-font" (click)="continuePlaying()">KEEP PLAYING</button>
+              <a class="secondary-btn arcade-font" routerLink="/">GO TO HOME</a>
+            </div>
+          </div>
+        }
+
+        @if (gameOver()) {
+          <div class="overlay lose-overlay">
+            <h2>Game Over!</h2>
+            <p>No more moves available.</p>
+            <div class="overlay-actions">
+              <button class="primary-btn arcade-font" (click)="initGame()">TRY AGAIN</button>
+              <a class="secondary-btn arcade-font" routerLink="/">GO TO HOME</a>
+            </div>
+          </div>
+        }
+      </div>
+
+      <p class="instructions">
+        <strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> or <strong>W A S D</strong> to move the tiles. Tiles with the same number merge into one when they touch. Add them up to reach 2048!
+      </p>
+    </div>
+
+    <aside class="leaderboard-section">
+      <app-leaderboard gameType="2048"></app-leaderboard>
+    </aside>
+
+  </div>
+</main>

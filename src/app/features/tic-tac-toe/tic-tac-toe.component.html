@@ -1,0 +1,52 @@
+<main class="game-container">
+  <header class="game-header">
+    <a class="back-btn arcade-font" routerLink="/">⬅ HUB</a>
+    <h1 class="title">Tic Tac Toe</h1>
+    <div class="spacer"></div> </header>
+
+  <div class="mode-selector arcade-font">
+    <button [class.active]="gameMode() === 'PvE'" (click)="setMode('PvE')">VS AI</button>
+    <button [class.active]="gameMode() === 'PvP'" (click)="setMode('PvP')">2 PLAYER</button>
+  </div>
+
+  <div class="status-panel">
+    @if (!result().winner) {
+      <h2 class="turn-text" [class.x-turn]="xIsNext()" [class.o-turn]="!xIsNext()">
+        {{ gameMode() === 'PvE' && !xIsNext() ? 'AI is thinking...' : 'Player ' + currentPlayer() + '\'s Turn' }}
+      </h2>
+    }
+  </div>
+
+  <div class="board">
+    @for (cell of board(); track $index) {
+      <button 
+        class="cell" 
+        [ngClass]="{
+          'x-cell': cell === 'X',
+          'o-cell': cell === 'O',
+          'winning-cell': result().line?.includes($index)
+        }"
+        (click)="makeMove($index)"
+        [disabled]="!!cell || !!result().winner || (gameMode() === 'PvE' && !xIsNext())">
+        {{ cell }}
+      </button>
+    }
+  </div>
+
+  <button class="reset-btn arcade-font" (click)="resetGame()">
+    RESTART MATCH ↻
+  </button>
+
+  @if (result().winner) {
+    <div class="game-over-overlay">
+      <div class="game-over-modal" @popIn>
+        <h1 
+          class="announcement"
+          [ngClass]="{'win-text': result().winner === 'X', 'lose-text': result().winner === 'O', 'draw-text': result().winner === 'Draw'}">
+          {{ getAnnouncementText() }}
+        </h1>
+        <button class="play-again-btn arcade-font" (click)="resetGame()">PLAY AGAIN</button>
+      </div>
+    </div>
+  }
+</main>

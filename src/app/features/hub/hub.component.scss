@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+/* --- CUSTOM SCROLLBAR & SELECTION --- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #059669; }
+
+::selection { background: #10b981; color: #000; }
+::-moz-selection { background: #10b981; color: #000; }
+
+.arcade-font {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+:host {
+  display: block;
+  --accent-color: #10b981;
+}
+
+/* --- MAIN LAYOUT & NOTHING OS DOT-MATRIX --- */
+.ea-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary, #000000); 
+  color: var(--text-primary, #ffffff);
+  overflow-x: hidden;
+  transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
+}
+
+/* RAZOR-SHARP DOT-MATRIX */
+.ea-layout::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  z-index: -2;
+  pointer-events: none;
+  transition: background-image 0.5s ease;
+}
+
+/* THE "GLYPH" LED SWEEP */
+.ea-layout::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    transparent 0%, 
+    transparent 40%, 
+    rgba(255, 255, 255, 0.02) 45%, 
+    rgba(16, 185, 129, 0.04) 50%, 
+    rgba(255, 255, 255, 0.02) 55%, 
+    transparent 60%, 
+    transparent 100%
+  );
+  background-size: 300% 300%;
+  animation: glyphSweep 8s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes glyphSweep {
+  0% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* --- REFINED NAVIGATION & BRANDING --- */
+.ea-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem 3rem; background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky; top: 0; z-index: 100;
+
+  .nav-brand {
+    display: flex; align-items: center; gap: 15px; cursor: pointer;
+    font-size: 2rem; font-weight: 900; color: #fff; letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    
+    .ps-logo { 
+      width: 35px; height: auto; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+      .ps-graphic { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 4px; transition: stroke 0.3s;}
+      .ps-accent { fill: var(--accent-color); }
+    }
+    
+    &:hover .ps-logo { transform: rotate(-10deg) scale(1.1); }
+  }
+  .nav-controls { display: flex; gap: 2rem; align-items: center; }
+}
+
+/* --- NOTHING OS HARDWARE TOGGLE --- */
+.nfs-toggle {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  
+  .toggle-track { 
+    width: 48px; height: 24px; 
+    background: #111; border: 2px solid #333; 
+    border-radius: 20px; position: relative; 
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .toggle-thumb {
+    width: 14px; height: 14px; 
+    background: #fff; border-radius: 50%; 
+    position: absolute; top: 3px; left: 3px; 
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .toggle-label { font-size: 0.85rem; color: #fff; font-weight: 900; letter-spacing: 1px; }
+  &.active .toggle-thumb { left: 27px; }
+}
+
+/* --- THE UNIFIED LOGIN BUTTON --- */
+.nfs-nav-btn {
+  background: transparent; border: 1px solid #fff; color: #fff;
+  padding: 0.5rem 1.2rem; cursor: pointer; transform: skewX(-10deg);
+  display: flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: 0.3s;
+  
+  .btn-icon { background: #3b82f6; padding: 2px 5px; font-size: 0.7rem; color: #fff; }
+  &:hover { background: #fff; color: #000; .btn-icon { background: #000; color: #fff; } }
+}
+
+/* --- NAV PROFILE --- */
+.user-profile.clickable {
+  display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center;
+  gap: 12px; cursor: pointer; padding: 0.5rem 1rem; border: 1px solid transparent; transform: skewX(-10deg); transition: all 0.3s ease;
+  .welcome-text { font-weight: 800; color: var(--accent-color); transform: skewX(10deg); margin: 0; line-height: 1; }
+  .avatar-mini { width: 32px; height: 32px; background: var(--accent-color); color: #000; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.1rem; transform: skewX(10deg); margin: 0; }
+  &:hover { border-color: var(--accent-color); background: rgba(16, 185, 129, 0.1); }
+}
+
+/* --- HERO SECTION --- */
+.ea-hero {
+  position: relative; height: 55vh; display: flex; align-items: center; padding: 0 5rem;
+  background: radial-gradient(circle at right, #111 0%, transparent 100%);
+  .hero-content {
+    z-index: 2;
+    .hero-title {
+      font-size: 7rem; font-weight: 900; margin: 0; line-height: 0.9;
+      background: linear-gradient(to bottom right, #ffffff, #6b7280);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; transform: skewX(-5deg);
+    }
+    .hero-subtitle { font-size: 1.5rem; color: #10b981; margin-top: 1.5rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+  }
+  .hero-slant-overlay {
+    position: absolute; bottom: -2px; left: 0; width: 100%; height: 120px;
+    background: var(--bg-primary, #000000); clip-path: polygon(0 100%, 100% 100%, 100% 0);
+    transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* --- MASSIVE CARDS GRID --- */
+.ea-games-section { padding: 4rem 5rem; max-width: 1920px; margin: 0 auto; }
+.nfs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 6rem; }
+
+.nfs-card {
+  position: relative; height: 580px; cursor: pointer; transform: skewX(-6deg); 
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+  overflow: hidden; box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+
+  &.bg-neon-blue { background: linear-gradient(135deg, #0a0a0a, #1e40af); }
+  &.bg-neon-gold { background: linear-gradient(135deg, #0a0a0a, #b45309); }
+  &.bg-neon-red { background: linear-gradient(135deg, #0a0a0a, #b91c1c); }
+
+  .watermark-graphic {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) skewX(6deg) scale(1.1); 
+    font-size: 16rem; color: rgba(255, 255, 255, 0.05); font-weight: 900; z-index: 0;
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-inner {
+    position: absolute; inset: 8px; background: rgba(10, 10, 10, 0.95);
+    padding: 5rem 3.5rem; display: flex; flex-direction: column; justify-content: flex-end; z-index: 1;
+  }
+
+  .game-tags {
+    display: flex; gap: 12px; height: 40px; margin-bottom: auto; transform: skewX(6deg); align-items: center; transition: 0.4s ease;
+    .tag { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2); padding: 6px 14px; font-size: 0.8rem; color: #fff; white-space: nowrap; }
+  }
+
+  h2 { font-size: 4.5rem; color: #fff; transform: skewX(6deg); transition: 0.5s ease; margin-top: 1rem; }
+  .game-info { font-size: 1.3rem; color: #9ca3af; transform: skewX(6deg); line-height: 1.8; transition: 0.4s ease; }
+  
+  .play-action {
+    position: absolute; bottom: 4rem; left: 3.5rem; background: #fff; color: #000;
+    padding: 1.4rem 3.5rem; font-size: 1.2rem; font-weight: 900; 
+    transform: skewX(6deg) translateY(100px); opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &:hover {
+    transform: skewX(-6deg) translateY(-25px) scale(1.04);
+    .card-inner { background: rgba(10, 10, 10, 0.6); }
+    .watermark-graphic { transform: translate(-50%, -50%) skewX(6deg) scale(1.8) rotate(-4deg); color: rgba(255,255,255,0.18); text-shadow: 0 0 30px rgba(255, 255, 255, 0.4); }
+    .game-tags { transform: skewX(6deg) translateY(-50px); opacity: 0; }
+    h2 { transform: skewX(6deg) translateY(-60px); }
+    .game-info { transform: skewX(6deg) translateY(-55px); opacity: 0; }
+    .play-action { transform: skewX(6deg) translateY(0); opacity: 1; animation: buttonPulse 2s infinite; }
+  }
+}
+
+@keyframes buttonPulse {
+  0% { box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2); }
+  50% { box-shadow: 0 5px 30px rgba(255, 255, 255, 0.7); }
+  100% { box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2); }
+}
+
+@keyframes buttonPulseLight {
+  0% { box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5); }
+  100% { box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+}
+
+/* =========================================================
+   LIGHT THEME: PURE NOTHING OS MONOCHROME
+   ========================================================= */
+:host-context(body.light-theme) {
+  --bg-primary: #ffffff; 
+  --text-primary: #000000;
+  
+  .ea-nav { background: rgba(255, 255, 255, 0.95); border-bottom-color: rgba(0,0,0,0.1); }
+  .nav-brand { color: #000; text-shadow: none; }
+  .ps-logo .ps-graphic { stroke: rgba(0, 0, 0, 0.8); }
+
+  /* LIGHT MODE DOT MATRIX */
+  .ea-layout::before { background-image: radial-gradient(rgba(0, 0, 0, 0.2) 1.5px, transparent 1.5px); }
+  .ea-layout::after {
+    background: linear-gradient(135deg, 
+      transparent 0%, transparent 40%, 
+      rgba(0, 0, 0, 0.02) 45%, rgba(0, 0, 0, 0.05) 50%, 
+      rgba(0, 0, 0, 0.02) 55%, transparent 60%, transparent 100%
+    );
+  }
+
+  /* TEXT FIX FOR LIGHT MODE */
+  .ea-hero {
+    background: radial-gradient(circle at right, rgba(0,0,0,0.05) 0%, transparent 100%);
+    .hero-title {
+      background: linear-gradient(to bottom right, #000000, #4b5563);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+  }
+
+  /* LIGHT MODE HARDWARE TOGGLE */
+  .nfs-toggle {
+    .toggle-label { color: #000; }
+    .toggle-track { background: #ffffff; border: 2px solid #000000; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05); }
+    .toggle-thumb { background: #000000; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+  }
+
+  .nfs-nav-btn { border-color: #000; color: #000; &:hover { background: #000; color: #fff; } }
+
+  .nfs-card {
+    &.bg-neon-blue { background: linear-gradient(135deg, #bfdbfe, #3b82f6); }
+    &.bg-neon-gold { background: linear-gradient(135deg, #fef3c7, #fbbf24); }
+    &.bg-neon-red { background: linear-gradient(135deg, #fee2e2, #f87171); }
+    .card-inner { background: rgba(255, 255, 255, 0.96); }
+    .tag { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); color: #000; }
+    h2 { color: #111827; } .game-info { color: #4b5563; }
+    .watermark-graphic { color: rgba(0, 0, 0, 0.08); }
+    &:hover {
+      .card-inner { background: rgba(255, 255, 255, 0.4); }
+      .watermark-graphic { color: rgba(0, 0, 0, 0.25); text-shadow: 0 0 15px rgba(0, 0, 0, 0.1); }
+      .play-action { background: #000; color: #fff; animation: buttonPulseLight 2s infinite;}
+    }
+  }
+}
+
+/* --- MODAL ENTRANCE ANIMATIONS --- */
+@keyframes backdropFade {
+  from { opacity: 0; -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px); }
+  to { opacity: 1; -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); }
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: skewX(-6deg) translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: skewX(-6deg) translateY(0) scale(1); }
+}
+
+/* --- PERFECTED & COMPACT PROFILE MODAL --- */
+.modal-backdrop { 
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+  -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); 
+  display: flex; justify-content: center; align-items: center; z-index: 1000; 
+  animation: backdropFade 0.3s ease-out forwards; 
+}
+
+.profile-card { 
+  width: 100%; max-width: 360px; 
+  background: #0a0a0a; border: 3px solid var(--accent-color); 
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  transform: skewX(-6deg); position: relative;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: cardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  
+  .card-inner { padding: 2.5rem 2rem 1.5rem; transform: skewX(6deg); display: flex; flex-direction: column; }
+
+  &:hover {
+    transform: skewX(-6deg) translateY(-15px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(16, 185, 129, 0.4);
+  }
+
+  .logout-btn { opacity: 0 !important; transform: translateY(15px) !important; pointer-events: none; }
+  &:hover .logout-btn { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto; }
+}
+
+.close-btn { 
+  position: absolute; top: 0.8rem; right: 1.2rem; background: transparent; border: none; color: #fff; 
+  font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: color 0.3s;
+  &:hover { color: var(--accent-color); }
+}
+
+.profile-header {
+  text-align: center; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  .avatar-large {
+    width: 60px; height: 60px; background: #fff; display: flex; justify-content: center; align-items: center;
+    margin-bottom: 0.5rem; box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); 
+    svg { width: 35px; height: auto; fill: var(--accent-color); } 
+  }
+  h2 { font-size: 1.8rem; margin: 0; color: #fff; letter-spacing: 2px; } 
+  .role-badge { color: var(--accent-color); background: #050505; padding: 0.3rem 1rem; font-size: 0.75rem; font-weight: 900; }
+}
+
+.profile-details {
+  width: 100%; 
+  .detail-row {
+    display: flex; flex-direction: column; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;
+    .label { color: var(--accent-color); font-size: 0.75rem; font-weight: 900; margin-bottom: 0.2rem; letter-spacing: 1px; }
+    .value { color: #fff; font-size: 1rem; font-weight: bold; }
+  }
+}
+
+.stats-grid {
+  display: flex; gap: 0.8rem; margin-top: 0.5rem; width: 100%;
+  .stat-box {
+    flex: 1; background: transparent; padding: 1rem 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 1px solid var(--accent-color); 
+    .stat-num { font-size: 2rem; color: #fff; line-height: 1; font-weight: 900; margin-bottom: 0.4rem; } 
+    .stat-label { color: #fff; font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; text-align: center; } 
+  }
+}
+
+.logout-btn {
+  position: relative !important; bottom: auto !important; left: auto !important; margin-top: 1.5rem !important; 
+  width: 100% !important; box-sizing: border-box; background: transparent !important; color: #ef4444 !important; 
+  border: 2px solid #ef4444 !important; padding: 0.8rem !important; font-size: 0.9rem !important; font-weight: 900 !important; 
+  letter-spacing: 1.5px; text-align: center; line-height: 1.4; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important; box-shadow: none !important;
+  &:hover { background: #ef4444 !important; color: #fff !important; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4) !important; }
+}
