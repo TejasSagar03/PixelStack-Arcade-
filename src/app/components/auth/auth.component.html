@@ -51,7 +51,10 @@
 
         <button type="submit" class="play-action arcade-font" [disabled]="isLoading() || !authForm.valid">
           @if (isLoading()) {
-            <span class="spinner"></span> PROCESSING...
+            <div class="loading-wrapper">
+              <span class="spinner"></span> 
+              <span>WAKING SERVER...</span>
+            </div>
           } @else {
             {{ isLoginMode() ? 'INITIALIZE ➔' : 'REGISTER ➔' }}
           }
