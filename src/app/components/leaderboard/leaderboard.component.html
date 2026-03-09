@@ -1,21 +1,24 @@
-<div class="leaderboard-container">
-  <h2>🏆 Top 10</h2>
-  
-  <div *ngIf="isLoading()" class="loading">Loading scores...</div>
-  
-  <div *ngIf="!isLoading() && leaderboardData().length === 0" class="empty">
-    No scores yet. Be the first!
-  </div>
+<div class="leaderboard-card">
+  <h3 class="arcade-font header-title">GLOBAL RANKINGS</h3>
 
-  <ul *ngIf="!isLoading() && leaderboardData().length > 0" class="score-list">
-    <li *ngFor="let entry of leaderboardData(); let i = index" 
-        class="score-item" 
-        [class.top-three]="i < 3">
-      
-      <span class="rank">#{{ i + 1 }}</span>
-      <span class="username">{{ entry.user?.username || 'Unknown' }}</span>
-      <span class="score">{{ entry.value }}</span>
-      
-    </li>
-  </ul>
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="spinner"></span>
+      <p>LOADING SCORES...</p>
+    </div>
+  } @else if (scores().length === 0) {
+    <div class="empty-state">
+      <p>No scores yet. Be the first to hit the grid!</p>
+    </div>
+  } @else {
+    <ul class="score-list">
+      @for (score of scores(); track score.id; let i = $index) {
+        <li class="score-item">
+          <span class="rank arcade-font">#{{ i + 1 }}</span>
+          <span class="player-name">{{ score.user?.username || 'Unknown Driver' }}</span>
+          <span class="score-value">{{ score.value }}</span>
+        </li>
+      }
+    </ul>
+  }
 </div>

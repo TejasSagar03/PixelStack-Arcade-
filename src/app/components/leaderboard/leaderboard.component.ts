@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, Input, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../core/services/api.service'; // Adjust path if needed
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-leaderboard',
@@ -10,24 +10,21 @@ import { ApiService } from '../../core/services/api.service'; // Adjust path if 
   styleUrls: ['./leaderboard.component.scss']
 })
 export class LeaderboardComponent implements OnInit {
-  // This allows us to reuse this leaderboard for ANY game!
-  @Input() gameType: string = '2048'; 
-  
+  @Input() gameType!: string; 
   private apiService = inject(ApiService);
-  
-  leaderboardData = signal<any[]>([]);
+
+  scores = signal<any[]>([]);
   isLoading = signal<boolean>(true);
 
   async ngOnInit() {
-    await this.fetchScores();
+    await this.fetchLeaderboard();
   }
 
-  async fetchScores() {
+  async fetchLeaderboard() {
     this.isLoading.set(true);
     try {
-      // Calls your NestJS backend: GET /games/leaderboard?game=2048
-      const data = await this.apiService.getLeaderboard(this.gameType);
-      this.leaderboardData.set(data as any[]);
+      const data: any = await this.apiService.getLeaderboard(this.gameType);
+      this.scores.set(data);
     } catch (error) {
       console.error('Failed to load leaderboard', error);
     } finally {

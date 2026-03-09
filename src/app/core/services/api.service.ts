@@ -8,10 +8,15 @@ import { environment } from '../../../environments/environment';
 })
 export class ApiService {
   private http = inject(HttpClient);
-  
   private baseUrl = environment.apiUrl; 
 
-  currentUser = signal<any>(null);
+  // 1. Initialize from localStorage so user survives page refreshes!
+  currentUser = signal<any>(this.getStoredUser());
+
+  private getStoredUser() {
+    const stored = localStorage.getItem('pixelstack_user');
+    return stored ? JSON.parse(stored) : null;
+  }
 
   async signup(userData: any) {
     return await firstValueFrom(
@@ -24,16 +29,31 @@ export class ApiService {
       this.http.post(`${this.baseUrl}/auth/login`, { identifier, password })
     );
     
+    // 2. Save the user locally so they stay logged in
     this.currentUser.set(response);
+    localStorage.setItem('pixelstack_user', JSON.stringify(response));
+
     return response;
   }
 
-  // --- EXISTING GAME METHODS ---
+  logout() {
+    this.currentUser.set(null);
+    localStorage.removeItem('pixelstack_user');
+  }
+
+  // --- GAME METHODS ---
 
   async submitScore(gameType: string, value: number) {
     const user = this.currentUser();
+
+    // 3. Safeguard: Prevent database crashes by blocking 'anonymous'
+    if (!user) {
+      console.warn('Driver not logged in. Score will not be saved.');
+      return; 
+    }
+
     const payload = {
-      userId: user ? user.id : 'anonymous', 
+      userId: user.id, // Sends the actual database UUID
       gameType: gameType,
       value: value
     };
