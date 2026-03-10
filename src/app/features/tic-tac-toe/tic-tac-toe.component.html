@@ -1,8 +1,10 @@
 <main class="game-container">
+  <div class="animated-grid-bg"></div>
   <header class="game-header">
     <a class="back-btn arcade-font" routerLink="/">⬅ HUB</a>
     <h1 class="title">Tic Tac Toe</h1>
-    <div class="spacer"></div> </header>
+    <div class="spacer"></div> 
+  </header>
 
   <div class="mode-selector arcade-font">
     <button [class.active]="gameMode() === 'PvE'" (click)="setMode('PvE')">VS AI</button>
@@ -22,13 +24,22 @@
       <button 
         class="cell" 
         [ngClass]="{
-          'x-cell': cell === 'X',
-          'o-cell': cell === 'O',
+          'x-cell-glow': cell === 'X',
+          'o-cell-glow': cell === 'O',
           'winning-cell': result().line?.includes($index)
         }"
         (click)="makeMove($index)"
         [disabled]="!!cell || !!result().winner || (gameMode() === 'PvE' && !xIsNext())">
-        {{ cell }}
+        
+        @if (cell === 'X') {
+          <svg class="draw-svg" viewBox="0 0 100 100">
+            <path class="x-path" d="M20 20 L80 80 M80 20 L20 80" />
+          </svg>
+        } @else if (cell === 'O') {
+          <svg class="draw-svg" viewBox="0 0 100 100">
+            <circle class="o-path" cx="50" cy="50" r="30" />
+          </svg>
+        }
       </button>
     }
   </div>

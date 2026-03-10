@@ -1,6 +1,7 @@
 import { Component, HostListener, signal, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgStyle } from '@angular/common';
+import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { ApiService } from '../../core/services/api.service';
 import { LeaderboardComponent } from '../../components/leaderboard/leaderboard.component';
 
@@ -14,7 +15,23 @@ interface GameState {
   standalone: true,
   imports: [RouterLink, NgStyle, LeaderboardComponent],
   templateUrl: './game-2048.component.html',
-  styleUrls: ['./game-2048.component.scss']
+  styleUrls: ['./game-2048.component.scss'],
+  animations: [
+    trigger('tileAnimation', [
+      transition(':enter', [
+        style({ transform: 'scale(0)', opacity: 0 }),
+        animate('200ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', 
+          style({ transform: 'scale(1)', opacity: 1 }))
+      ]),
+      transition('* => *', [
+        animate('150ms ease-in-out', keyframes([
+          style({ transform: 'scale(1)', offset: 0 }),
+          style({ transform: 'scale(1.15)', offset: 0.5 }),
+          style({ transform: 'scale(1)', offset: 1 })
+        ]))
+      ])
+    ])
+  ]
 })
 export class Game2048Component {
   private apiService = inject(ApiService);
@@ -27,7 +44,6 @@ export class Game2048Component {
   keepPlaying = signal<boolean>(false); 
   gameOver = signal<boolean>(false);
 
-  // Touch tracking variables for mobile swipe
   private touchStartX = 0;
   private touchStartY = 0;
   private touchEndX = 0;
@@ -71,8 +87,6 @@ export class Game2048Component {
     }
   }
 
-  // --- MOBILE SWIPE SUPPORT START ---
-
   @HostListener('touchstart', ['$event'])
   handleTouchStart(event: TouchEvent) {
     this.touchStartX = event.changedTouches[0].screenX;
@@ -91,22 +105,18 @@ export class Game2048Component {
 
     const deltaX = this.touchEndX - this.touchStartX;
     const deltaY = this.touchEndY - this.touchStartY;
-    const minSwipeDistance = 30; // Minimum pixels to count as a swipe
+    const minSwipeDistance = 30;
 
-    if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
-      return; 
-    }
+    if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return; 
 
     let moved = false;
     const currentGrid = this.grid();
     const currentScore = this.score();
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 0) moved = this.move('RIGHT');
-      else moved = this.move('LEFT');
+      moved = deltaX > 0 ? this.move('RIGHT') : this.move('LEFT');
     } else {
-      if (deltaY > 0) moved = this.move('DOWN');
-      else moved = this.move('UP');
+      moved = deltaY > 0 ? this.move('DOWN') : this.move('UP');
     }
 
     if (moved) {
@@ -115,8 +125,6 @@ export class Game2048Component {
       this.checkGameState();
     }
   }
-
-  // --- MOBILE SWIPE SUPPORT END ---
 
   undo() {
     const hist = this.history();
@@ -142,7 +150,6 @@ export class Game2048Component {
 
     const slideAndMerge = (line: number[]): number[] => {
       let filtered = line.filter(val => val !== 0); 
-      
       for (let i = 0; i < filtered.length - 1; i++) {
         if (filtered[i] !== 0 && filtered[i] === filtered[i + 1]) {
           filtered[i] *= 2; 
@@ -150,7 +157,6 @@ export class Game2048Component {
           filtered[i + 1] = 0; 
         }
       }
-      
       filtered = filtered.filter(val => val !== 0); 
       while (filtered.length < 4) filtered.push(0); 
       return filtered;
@@ -181,7 +187,12 @@ export class Game2048Component {
     if (moved) {
       this.grid.set(newGrid);
       this.score.update(s => s + scoreIncrease);
-      this.triggerHaptic(scoreIncrease > 0 ? [20, 30] : 15);
+      
+      if (scoreIncrease > 0) {
+        this.triggerHaptic([20, 30]);
+      } else {
+        this.triggerHaptic(15);
+      }
     }
 
     return moved;
@@ -211,6 +222,7 @@ export class Game2048Component {
     if (flatGrid.includes(2048) && !this.hasWon() && !this.keepPlaying()) {
       this.hasWon.set(true);
       this.triggerHaptic([50, 50, 100]);
+      this.playSound('win');
     }
 
     if (!flatGrid.includes(0)) {
@@ -235,9 +247,8 @@ export class Game2048Component {
     if (finalScore > 0) {
       try {
         await this.apiService.submitScore('2048', finalScore);
-        console.log(`Successfully saved score of ${finalScore} to the database!`);
       } catch (error) {
-        console.error('Failed to save score. Is the NestJS server running?', error);
+        console.error('Failed to save score.', error);
       }
     }
   }
@@ -246,6 +257,13 @@ export class Game2048Component {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(pattern);
     }
+  }
+
+  private playSound(soundName: 'win') {
+    const audio = new Audio();
+    audio.src = `/assets/sounds/${soundName}.mp3`;
+    audio.load();
+    audio.play().catch(err => console.warn('Audio blocked', err));
   }
 
   private getEmptyGrid(): number[][] { return Array.from({ length: 4 }, () => Array(4).fill(0)); }
@@ -261,7 +279,5 @@ export class Game2048Component {
     return colors[value] || '#3c3a32';
   }
 
-  getTextColor(value: number): string {
-    return value <= 4 ? '#776e65' : '#f9f6f2';
-  }
+  getTextColor(value: number): string { return value <= 4 ? '#776e65' : '#f9f6f2'; }
 }

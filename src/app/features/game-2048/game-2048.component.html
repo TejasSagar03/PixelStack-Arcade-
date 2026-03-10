@@ -1,4 +1,5 @@
 <main class="game-container">
+  <div class="animated-grid-bg"></div>
   <header class="game-header">
     <a class="back-btn arcade-font" routerLink="/">⬅ HUB</a>
     
@@ -19,7 +20,6 @@
   </div>
 
   <div class="layout-wrapper">
-    
     <div class="game-section">
       <div class="board-wrapper">
         <div class="board">
@@ -27,7 +27,8 @@
             @for (cell of row; track $index) {
               <div class="cell-bg">
                 @if (cell !== 0) {
-                  <div class="tile new-tile" 
+                  <div class="tile" 
+                       [@tileAnimation]="cell"
                        [ngStyle]="{'background-color': getTileColor(cell), 'color': getTextColor(cell)}">
                     {{ cell }}
                   </div>
@@ -61,13 +62,12 @@
       </div>
 
       <p class="instructions">
-        <strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> or <strong>W A S D</strong> to move the tiles. Tiles with the same number merge into one when they touch. Add them up to reach 2048!
+        <strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> or <strong>W A S D</strong> to move the tiles. Tiles with the same number merge into one when they touch.
       </p>
     </div>
 
     <aside class="leaderboard-section">
       <app-leaderboard gameType="2048"></app-leaderboard>
     </aside>
-
   </div>
 </main>

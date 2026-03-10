@@ -1,7 +1,7 @@
 import { Component, signal, computed, effect } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
-import { trigger, transition, style, animate, keyframes } from '@angular/animations';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 interface GameResult {
   winner: 'X' | 'O' | 'Draw' | null;
@@ -27,16 +27,14 @@ interface GameResult {
 export class TicTacToeComponent {
   board = signal<('X' | 'O' | null)[]>(Array(9).fill(null));
   xIsNext = signal<boolean>(true);
-  gameMode = signal<'PvP' | 'PvE'>('PvE'); // Default to Player vs AI
+  gameMode = signal<'PvP' | 'PvE'>('PvE'); 
   
   result = computed(() => this.calculateWinner(this.board()));
   currentPlayer = computed(() => this.xIsNext() ? 'X' : 'O');
 
   constructor() {
-    // Watch for turn changes to trigger AI
     effect(() => {
       if (this.gameMode() === 'PvE' && !this.xIsNext() && !this.result().winner) {
-        // Add a small delay so the AI feels natural, not instant
         setTimeout(() => this.makeComputerMove(), 600);
       }
     });
@@ -48,21 +46,15 @@ export class TicTacToeComponent {
   }
 
   makeMove(index: number) {
-    // Prevent move if cell is filled, game is over, or it's AI's turn
     if (this.board()[index] || this.result().winner || (this.gameMode() === 'PvE' && !this.xIsNext())) {
       return;
     }
-
     this.updateBoard(index);
   }
 
   private makeComputerMove() {
-    const currentBoard = this.board();
-    const bestMove = this.getSmartMove(currentBoard);
-    
-    if (bestMove !== -1) {
-      this.updateBoard(bestMove);
-    }
+    const bestMove = this.getSmartMove(this.board());
+    if (bestMove !== -1) this.updateBoard(bestMove);
   }
 
   private updateBoard(index: number) {
@@ -72,6 +64,16 @@ export class TicTacToeComponent {
       return newBoard;
     });
     this.xIsNext.update(val => !val);
+    
+    // Haptics on every move
+    this.triggerHaptic(10);
+
+    // Check for win right after move
+    const res = this.result();
+    if (res.winner && res.winner !== 'Draw') {
+      this.playSound('win');
+      this.triggerHaptic([50, 50, 100]);
+    }
   }
 
   resetGame() {
@@ -79,54 +81,45 @@ export class TicTacToeComponent {
     this.xIsNext.set(true);
   }
 
-  // --- SMART AI LOGIC ---
-  private getSmartMove(board: ('X' | 'O' | null)[]): number {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
-      [0, 4, 8], [2, 4, 6]             // Diagonals
-    ];
+  private triggerHaptic(pattern: number | number[]) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  }
 
-    // 1. Try to Win
+  private playSound(soundName: 'win') {
+    const audio = new Audio();
+    audio.src = `/assets/sounds/${soundName}.mp3`;
+    audio.load();
+    audio.play().catch(err => console.warn('Audio blocked', err));
+  }
+
+  private getSmartMove(board: ('X' | 'O' | null)[]): number {
+    const lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
     for (const [a, b, c] of lines) {
       if (board[a] === 'O' && board[b] === 'O' && !board[c]) return c;
       if (board[a] === 'O' && board[c] === 'O' && !board[b]) return b;
       if (board[b] === 'O' && board[c] === 'O' && !board[a]) return a;
     }
-
-    // 2. Block the Player (X) from winning
     for (const [a, b, c] of lines) {
       if (board[a] === 'X' && board[b] === 'X' && !board[c]) return c;
       if (board[a] === 'X' && board[c] === 'X' && !board[b]) return b;
       if (board[b] === 'X' && board[c] === 'X' && !board[a]) return a;
     }
-
-    // 3. Take the center if available
     if (!board[4]) return 4;
-
-    // 4. Take a random available spot
     const emptySpots = board.map((v, i) => v === null ? i : null).filter(v => v !== null) as number[];
     if (emptySpots.length === 0) return -1;
     return emptySpots[Math.floor(Math.random() * emptySpots.length)];
   }
 
   private calculateWinner(squares: ('X' | 'O' | null)[]): GameResult {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],
-      [0, 4, 8], [2, 4, 6]
-    ];
-
+    const lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
     for (const [a, b, c] of lines) {
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
         return { winner: squares[a], line: [a, b, c] };
       }
     }
-    
-    if (!squares.includes(null)) {
-      return { winner: 'Draw', line: null };
-    }
-    
+    if (!squares.includes(null)) return { winner: 'Draw', line: null };
     return { winner: null, line: null };
   }
 

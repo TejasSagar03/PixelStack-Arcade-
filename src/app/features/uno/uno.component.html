@@ -6,57 +6,124 @@
     <h1 class="title arcade-font">PixelUNO</h1>
   </header>
 
+  <!-- MAIN MENU -->
   @if (!mode()) {
     <div class="menu-overlay">
       <div class="glass-modal">
         <h2 class="arcade-font">Start Match</h2>
         <div class="mode-options">
-          <button class="primary-btn arcade-font" (click)="startGame('1v1_AI')">1 VS 1 (AI)</button>
-          <button class="primary-btn arcade-font" (click)="startGame('2v2_AI')">2 VS 2 (TEAM AI)</button>
+          <button class="primary-btn arcade-font" (click)="startGame('1v1_AI')">1 VS 1 (NORMAL)</button>
+          <button class="primary-btn wild-btn arcade-font" (click)="startGame('1v1_Wild')">1 VS 1 (WILD 'PLAY ALL')</button>
           <button class="primary-btn arcade-font" (click)="startGame('Local_PassPlay')">LOCAL PASS & PLAY</button>
         </div>
       </div>
     </div>
   }
 
-  @if (mode()) {
-    <div class="opponents-area">
+  <!-- REFINED NEON LOCAL SETUP SCREEN -->
+  @if (isSettingUp()) {
+    <div class="menu-overlay">
+      <div class="glass-modal setup-modal neon-border">
+        <h2 class="arcade-font setup-title">LOCAL SETUP</h2>
+        
+        <div class="setup-container">
+          @for (p of playerSetupList(); track $index) {
+            <div class="setup-row-neon">
+              <div class="player-tag">
+                <span class="arcade-font neon-text">P{{$index + 1}}</span>
+              </div>
+              <div class="input-neon-box">
+                <input 
+                  class="arcade-font player-input-field" 
+                  type="text" 
+                  [value]="p.name" 
+                  (input)="updatePlayerName($index, $event)" 
+                  placeholder="PLAYER NAME"
+                >
+              </div>
+              @if (playerSetupList().length > 2) {
+                <button class="remove-player-btn arcade-font" (click)="removePlayer($index)">✕</button>
+              }
+            </div>
+          }
+        </div>
+        
+        <div class="setup-footer">
+          @if (playerSetupList().length < 4) {
+            <button class="primary-btn arcade-font add-btn" (click)="addPlayer()">
+              + ADD PLAYER
+            </button>
+          }
+          <button class="primary-btn arcade-font start-btn" (click)="confirmLocalSetup()">
+            START GAME
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- PASS DEVICE (SOLID BLACKOUT FOR PRIVACY) -->
+  @if (passScreenActive()) {
+    <div class="menu-overlay pass-overlay">
+      <div class="glass-modal pass-modal">
+        <h2 class="arcade-font">PASS THE DEVICE</h2>
+        <h1 class="target-player arcade-font">{{ players()[turnIndex()].name }}</h1>
+        <p class="pass-text">Handing over in...</p>
+        <div class="countdown-circle">
+          <span class="arcade-font">{{ passCountdown() }}</span>
+        </div>
+        <button class="primary-btn arcade-font" (click)="resumeGame()">I'M READY</button>
+      </div>
+    </div>
+  }
+
+  @if (mode() && !isSettingUp()) {
+    
+    @if (penaltyMessage()) {
+      <div class="penalty-toast arcade-font">{{ penaltyMessage() }}</div>
+    }
+
+    @if (canCallUno()) {
+      <button class="uno-button arcade-font" (click)="callUno()">UNO!</button>
+    }
+
+    <!-- OPPONENTS AREA -->
+    <div class="opponents-area" [class.blur-content]="passScreenActive()">
       @for (player of players(); track player.id) {
-        @if (player.id !== turnIndex() || player.isAI) {
+        @if (mode() === 'Local_PassPlay' ? player.id !== turnIndex() : player.id !== 0) {
           <div class="mini-hand" [class.active-turn]="turnIndex() === player.id">
             <h3 class="arcade-font">{{ player.name }} ({{ player.hand.length }})</h3>
             <div class="card-backs">
-              @for (card of player.hand.slice(0, 3); track $index) {
+              @for (card of player.hand.slice(0, 5); track $index) {
                 <div class="uno-card card-back mini"></div>
               }
-              @if (player.hand.length > 3) { <span class="more-cards">+{{ player.hand.length - 3 }}</span> }
+              @if (player.hand.length > 5) { <span class="more-cards arcade-font">+{{ player.hand.length - 5 }}</span> }
             </div>
           </div>
         }
       }
     </div>
 
-    <div class="glass-table">
+    <!-- CENTRAL PLAY AREA -->
+    <div class="glass-table" [class.blur-content]="passScreenActive()">
       <div class="direction-indicator" [class.ccw]="playDirection() === -1">
         <span class="arcade-font">DIRECTION {{ playDirection() === 1 ? '↻' : '↺' }}</span>
       </div>
 
       <div class="center-table">
-        <div class="deck-pile" (click)="drawFromDeck(turnIndex())" [class.disabled]="players()[turnIndex()].isAI || winner() || awaitingColorChoice()">
+        <div class="deck-pile" (click)="drawFromDeck(turnIndex())" 
+             [class.disabled]="players()[turnIndex()].isAI || winner() || awaitingColorChoice() || isAnimating() || passScreenActive()">
           <div class="uno-card card-back draw-pile">
             <div class="draw-label arcade-font">DRAW</div>
           </div>
         </div>
 
-        <div class="discard-pile" [class.slam-anim]="specialAnimation() !== null">
+        <div class="discard-pile" cdkDropList id="discardPile" (cdkDropListDropped)="drop($event)" [class.slam-anim]="specialAnimation() !== null || isAnimating()">
           @if (discardPile().length > 0) {
-            <div class="uno-card" 
-                 [class]="discardPile()[discardPile().length - 1].color"
-                 [class.wild-special]="discardPile()[discardPile().length - 1].color === 'wild'"
-                 [class.special-glow]="discardPile()[discardPile().length - 1].isSpecial">
+            <div class="uno-card" [class]="discardPile()[discardPile().length - 1].color" [class.wild-special]="discardPile()[discardPile().length - 1].color === 'wild'" [class.special-glow]="discardPile()[discardPile().length - 1].isSpecial">
               <span class="corner top-left">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
               <div class="oval">
-                <span class="center-val">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
+                <span class="center-val" [class.play-all]="discardPile()[discardPile().length - 1].value === 'PlayAll'">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
               </div>
               <span class="corner bottom-right">{{ getSymbol(discardPile()[discardPile().length - 1].value) }}</span>
             </div>
@@ -65,17 +132,28 @@
       </div>
     </div>
 
-    <div class="player-area">
-      <h2 class="turn-text arcade-font" [class.is-my-turn]="!players()[turnIndex()].isAI">
-        {{ players()[turnIndex()].isAI ? 'AI is Thinking...' : 'Your Turn!' }}
-      </h2>
-      
-      <div class="hand">
-        @for (card of players()[0].hand; track card.id) {
+    <!-- PLAYER AREA -->
+    <div class="player-area" [class.hide-hand]="passScreenActive()">
+      <div class="hand"
+           cdkDropList
+           id="playerHand"
+           [cdkDropListData]="(mode() === 'Local_PassPlay' ? players()[turnIndex()] : players()[0]).hand"
+           [cdkDropListConnectedTo]="['discardPile']"
+           cdkDropListOrientation="horizontal"
+           (cdkDropListDropped)="drop($event)">
+        
+        @for (card of (mode() === 'Local_PassPlay' ? players()[turnIndex()] : players()[0]).hand; track card.id) {
           <div class="uno-card playable-card"
+               cdkDrag
+               [cdkDragData]="card"
                [class]="card.color"
-               [class.valid]="isValidPlay(card) && turnIndex() === 0 && !winner()"
-               (click)="playCard(0, card)">
+               [class.valid]="isValidPlay(card) && !players()[turnIndex()].isAI && !winner() && !isAnimating()"
+               [class.combo-glow]="isComboGlow(card)"
+               (mouseenter)="hoveredCard.set(card)"
+               (mouseleave)="hoveredCard.set(null)"
+               (click)="playCard(turnIndex(), card)">
+            
+            <div class="card-placeholder" *cdkDragPlaceholder></div>
             <span class="corner top-left">{{ getSymbol(card.value) }}</span>
             <div class="oval"><span class="center-val">{{ getSymbol(card.value) }}</span></div>
             <span class="corner bottom-right">{{ getSymbol(card.value) }}</span>
@@ -89,10 +167,10 @@
         <div class="glass-modal color-modal">
           <h2 class="arcade-font">Pick Color</h2>
           <div class="color-options">
-            <button class="color-btn red" (click)="selectColor('red')"></button>
-            <button class="color-btn blue" (click)="selectColor('blue')"></button>
-            <button class="color-btn green" (click)="selectColor('green')"></button>
-            <button class="color-btn yellow" (click)="selectColor('yellow')"></button>
+            <button type="button" class="color-btn red" (click)="selectColor('red')"></button>
+            <button type="button" class="color-btn blue" (click)="selectColor('blue')"></button>
+            <button type="button" class="color-btn green" (click)="selectColor('green')"></button>
+            <button type="button" class="color-btn yellow" (click)="selectColor('yellow')"></button>
           </div>
         </div>
       </div>
