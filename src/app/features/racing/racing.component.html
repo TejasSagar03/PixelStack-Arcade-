@@ -1,0 +1,67 @@
+<main class="arcade-container">
+  <div class="aura-bg" [class.hyper-speed]="isNitrousActive()"></div>
+
+  <header class="game-header">
+    <div class="header-top">
+      <h1 class="title arcade-font">NEON DRIFTER</h1>
+      @if (gameState() === 'PLAYING' || gameState() === 'PAUSED') {
+        <button class="pause-btn arcade-font" (click)="togglePause()">
+          {{ gameState() === 'PAUSED' ? '▶ RESUME' : '❚❚ PAUSE' }}
+        </button>
+      }
+    </div>
+    
+    <div class="stats-panel">
+      <div class="score-board arcade-font">
+        SCORE: <span class="highlight">{{ Math.floor(score()) }}</span>
+      </div>
+      <div class="nitro-bar-container">
+        <span class="arcade-font nitro-label">N2O</span>
+        <div class="nitro-track">
+          <div class="nitro-fill" [style.width.%]="nitroLevel()" [class.active]="isNitrousActive()"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="canvas-wrapper" [class.shake]="isHit()" [class.boost-shake]="isNitrousActive()">
+    <canvas #gameCanvas width="400" height="600"></canvas>
+
+    @if (gameState() === 'START') {
+      <div class="overlay glass-modal">
+        <h2 class="arcade-font neon-text">SYSTEM READY</h2>
+        <p class="arcade-font sub-text">ARROWS / A D : STEER</p>
+        <p class="arcade-font sub-text">SPACE : FIRE PLASMA</p>
+        <p class="arcade-font sub-text">SHIFT : NITROUS INJECTION</p>
+        <p class="arcade-font sub-text">ESC / P : PAUSE</p>
+        <button class="primary-btn arcade-font" (click)="startGame()">IGNITION</button>
+      </div>
+    }
+
+    @if (gameState() === 'PAUSED') {
+      <div class="overlay glass-modal">
+        <h2 class="arcade-font neon-text">SYSTEM PAUSED</h2>
+        <button class="primary-btn arcade-font" (click)="togglePause()">RESUME DRIFT</button>
+      </div>
+    }
+
+    @if (gameState() === 'GAMEOVER') {
+      <div class="overlay glass-modal border-danger">
+        <h2 class="arcade-font danger-text">BUSTED / CRASHED</h2>
+        <p class="arcade-font sub-text">FINAL SCORE: {{ Math.floor(score()) }}</p>
+        <button class="primary-btn danger-btn arcade-font" (click)="startGame()">REBOOT SYSTEM</button>
+      </div>
+    }
+  </div>
+
+  <div class="mobile-controls">
+    <div class="d-pad">
+      <button class="control-btn" (touchstart)="setKey('Left', true)" (touchend)="setKey('Left', false)">◀</button>
+      <button class="control-btn" (touchstart)="setKey('Right', true)" (touchend)="setKey('Right', false)">▶</button>
+    </div>
+    <div class="action-pad">
+      <button class="control-btn action-btn nitro-btn" (touchstart)="setKey('Shift', true)" (touchend)="setKey('Shift', false)">N2O</button>
+      <button class="control-btn action-btn fire-btn" (touchstart)="setKey('Space', true)" (touchend)="setKey('Space', false)">FIRE</button>
+    </div>
+  </div>
+</main>

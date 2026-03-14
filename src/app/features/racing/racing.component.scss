@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
+
+:host { 
+  display: block; background-color: #030604; color: #00ffaa; 
+  font-family: 'Share Tech Mono', monospace; min-height: 100vh; overflow: hidden; 
+}
+
+.arcade-font { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+.arcade-container { 
+  display: flex; flex-direction: column; align-items: center; justify-content: center; 
+  min-height: 100vh; padding: 1rem; position: relative; z-index: 1; 
+}
+
+.aura-bg {
+  position: absolute; inset: 0; z-index: -1;
+  background-image: linear-gradient(rgba(0, 255, 170, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 170, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px; animation: gridScroll 10s linear infinite;
+  &::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, transparent 10%, #030604 90%); }
+}
+
+.aura-bg.hyper-speed { animation: gridScroll 2s linear infinite; filter: hue-rotate(90deg); }
+
+@keyframes gridScroll { 0% { background-position: 0 0; } 100% { background-position: 0 40px; } }
+
+.game-header { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; margin-bottom: 1rem; gap: 0.5rem; }
+
+/* NEW HEADER TOP FOR PAUSE BUTTON */
+.header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.title { font-size: 1.8rem; color: #00ffaa; text-shadow: 0 0 10px #00ffaa; margin: 0; }
+
+.pause-btn {
+  background: transparent; color: #fff; border: 1px solid #fff; padding: 0.4rem 0.8rem;
+  font-size: 0.8rem; border-radius: 4px; cursor: pointer; transition: 0.2s;
+  &:hover { background: #fff; color: #000; box-shadow: 0 0 10px #fff; }
+}
+
+.stats-panel { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 5px; }
+.score-board { font-size: 1.2rem; .highlight { color: #fff; text-shadow: 0 0 10px #fff; } }
+
+.nitro-track { width: 100px; height: 12px; background: #000; border: 1px solid #00f0ff; border-radius: 6px; overflow: hidden; }
+.nitro-fill { height: 100%; background: #00f0ff; transition: width 0.1s linear; &.active { background: #fff; box-shadow: 0 0 15px #00f0ff; } }
+
+.canvas-wrapper {
+  position: relative; width: 400px; height: 600px; max-width: 100%; 
+  border: 4px solid #00ffaa; border-radius: 8px; background: #0a0a0a;
+  &.boost-shake { border-color: #00f0ff; animation: microShake 0.1s linear infinite; }
+}
+
+@keyframes microShake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, -1px); } }
+
+.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+.glass-modal { border: 2px solid #00ffaa; padding: 2rem; text-align: center; .neon-text { color: #00ffaa; text-shadow: 0 0 15px #00ffaa; } }
+
+.primary-btn {
+  background: transparent; color: #00ffaa; border: 2px solid #00ffaa; padding: 1rem 2rem; cursor: pointer; margin-top: 15px; font-weight: bold;
+  &:hover { background: #00ffaa; color: #000; box-shadow: 0 0 20px #00ffaa; }
+  &.danger-btn { border-color: #ff003c; color: #ff003c; &:hover { background: #ff003c; color: #fff; box-shadow: 0 0 20px #ff003c; } }
+}
+.danger-text { color: #ff003c; text-shadow: 0 0 15px #ff003c; margin-bottom: 10px; }
+.sub-text { color: #aaa; margin: 5px 0; font-size: 0.9rem; }
+
+.mobile-controls { display: flex; justify-content: space-between; width: 100%; max-width: 400px; margin-top: 1rem; gap: 10px; }
+.d-pad, .action-pad { display: flex; gap: 10px; flex: 1; }
+.control-btn {
+  flex: 1; padding: 1rem; background: #111; border: 2px solid #00ffaa; color: #00ffaa; border-radius: 8px; font-size: 1.5rem;
+  display: flex; justify-content: center; align-items: center;
+  &:active { background: #00ffaa; color: #000; }
+  &.action-btn { font-size: 1rem; font-weight: bold; font-family: 'Orbitron', sans-serif; }
+  &.nitro-btn { border-color: #00f0ff; color: #00f0ff; &:active { background: #00f0ff; color: #000; } }
+  &.fire-btn { border-color: #ff003c; color: #ff003c; &:active { background: #ff003c; color: #fff; } }
+}
+
+@media (min-width: 768px) { .mobile-controls { display: none; } }

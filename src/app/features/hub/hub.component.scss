@@ -167,6 +167,8 @@
   &.bg-neon-blue { background: linear-gradient(135deg, #0a0a0a, #1e40af); }
   &.bg-neon-gold { background: linear-gradient(135deg, #0a0a0a, #b45309); }
   &.bg-neon-red { background: linear-gradient(135deg, #0a0a0a, #b91c1c); }
+  &.bg-neon-green { background: linear-gradient(135deg, #0a0a0a, #047857); }
+  &.bg-neon-purple { background: linear-gradient(135deg, #0a0a0a, #7e22ce); }
 
   .watermark-graphic {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) skewX(6deg) scale(1.1); 
@@ -259,6 +261,9 @@
     &.bg-neon-blue { background: linear-gradient(135deg, #bfdbfe, #3b82f6); }
     &.bg-neon-gold { background: linear-gradient(135deg, #fef3c7, #fbbf24); }
     &.bg-neon-red { background: linear-gradient(135deg, #fee2e2, #f87171); }
+    &.bg-neon-green { background: linear-gradient(135deg, #a7f3d0, #10b981); }
+    &.bg-neon-purple { background: linear-gradient(135deg, #f3e8ff, #a855f7); }
+    
     .card-inner { background: rgba(255, 255, 255, 0.96); }
     .tag { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); color: #000; }
     h2 { color: #111827; } .game-info { color: #4b5563; }

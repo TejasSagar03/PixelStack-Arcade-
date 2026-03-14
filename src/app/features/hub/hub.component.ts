@@ -28,15 +28,13 @@ export class HubComponent implements OnInit {
   private document = inject(DOCUMENT);
   private apiService = inject(ApiService);
   
-  // FIX: Change to public so HTML template can access it
   public router = inject(Router); 
   
   currentUser = this.apiService.currentUser;
   isDarkMode = signal(true); 
-  
-  // FIX: Added missing signal for modal control
   showProfileModal = signal(false);
 
+  // UPDATED: Added Shinobi Dash to the games array
   games = [
     { 
       title: 'Tic Tac Toe', route: '/tic-tac-toe', bgClass: 'bg-neon-blue', 
@@ -52,6 +50,21 @@ export class HubComponent implements OnInit {
       title: 'UNO', route: '/uno', bgClass: 'bg-neon-red', 
       watermark: 'UNO', tags: ['MULTIPLAYER', 'CARDS'],
       info: 'The ultimate friendship ruiner. Strategize your colors, drop your wild cards, and shed your hand first.' 
+    },
+    { 
+      title: 'Neon Drifter', route: '/racing', bgClass: 'bg-neon-green', 
+      watermark: 'RACING', tags: ['SINGLE PLAYER', 'ACTION'],
+      info: 'High-speed top-down pixel racing. Hit the N2O, dodge traffic, and blast through police roadblocks.' 
+    },
+    { 
+      title: 'Terminal Hack', route: '/typing', bgClass: 'bg-neon-purple', 
+      watermark: 'HACK', tags: ['SINGLE PLAYER', 'TYPING'],
+      info: 'Infiltrate the mainframe. Type the falling syntax flawlessly before the firewall catches you.' 
+    },
+    { 
+      title: 'Shinobi Dash', route: '/shinobi', bgClass: 'bg-neon-red', 
+      watermark: 'NINJA', tags: ['ACTION', 'SURVIVAL'],
+      info: 'Run across moonlit rooftops as Naruto or Sasuke. Dodge obstacles and survive the ultimate Akatsuki boss rush.' 
     }
   ];
 
@@ -79,7 +92,6 @@ export class HubComponent implements OnInit {
     this.isDarkMode.update(mode => !mode);
   }
 
-  // FIX: Added missing method for modal toggling
   toggleProfile() {
     this.showProfileModal.update(val => !val);
   }

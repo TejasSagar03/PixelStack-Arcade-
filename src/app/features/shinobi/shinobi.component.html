@@ -1,0 +1,60 @@
+<main class="game-container">
+  @if (gameState() === 'SELECT_HERO' || gameState() === 'SELECT_BOSS') {
+    <div class="selection-screen">
+      <header class="phase-header">
+        <h1 class="arcade-font">{{ gameState() === 'SELECT_HERO' ? 'SELECT NINJA' : 'SELECT TARGET' }}</h1>
+      </header>
+      @if (gameState() === 'SELECT_HERO') {
+        <div class="roster-grid">
+          @for (h of heroes; track h.id) {
+            <div class="roster-card" [class.selected]="selectedHero()?.id === h.id" [style.--theme-color]="h.color" (click)="selectHero(h)">
+              <div class="card-inner">
+                <h2 class="arcade-font">{{ h.name }}</h2>
+                <p>{{ h.special }}</p>
+              </div>
+            </div>
+          }
+        </div>
+        <button class="action-btn primary arcade-font" [disabled]="!selectedHero()" (click)="confirmHero()">NEXT ➔</button>
+      }
+      @if (gameState() === 'SELECT_BOSS') {
+        <div class="roster-grid">
+          @for (b of bosses; track b.id) {
+            <div class="roster-card" [class.selected]="selectedBoss()?.id === b.id" [style.--theme-color]="b.color" (click)="selectBoss(b)">
+              <div class="card-inner">
+                <h2 class="arcade-font">{{ b.name }}</h2>
+                <p>{{ b.special }}</p>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="action-footer split">
+          <button class="action-btn secondary arcade-font" (click)="goBack()">BACK</button>
+          <button class="action-btn danger arcade-font" [disabled]="!selectedBoss()" (click)="startGame()">DEPLOY</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (gameState() === 'PLAYING' || gameState() === 'GAMEOVER') {
+    <div class="engine-wrapper">
+      <header class="hud arcade-font">
+        <div class="chakra-panel">
+          <div class="chakra-bar"><div class="chakra-fill" [style.width.%]="chakra()" [style.background]="selectedHero()?.color"></div></div>
+          @if (chakra() >= 100) { <span class="blink">READY! [SHIFT]</span> }
+        </div>
+        <div class="score">DISTANCE: {{ Math.floor(distance()) }}M</div>
+      </header>
+      <div class="canvas-container">
+        <canvas #gameCanvas width="800" height="400"></canvas>
+        @if (gameState() === 'GAMEOVER') {
+          <div class="game-over-modal">
+            <h1 class="arcade-font">WASTED</h1>
+            <button class="action-btn primary arcade-font" (click)="startGame()">RETRY</button>
+            <button class="action-btn secondary arcade-font" (click)="gameState.set('SELECT_HERO')">QUIT</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</main>

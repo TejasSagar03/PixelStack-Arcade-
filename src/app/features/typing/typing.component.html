@@ -1,0 +1,126 @@
+<main class="terminal-container">
+  
+  <canvas #matrixCanvas class="matrix-bg"></canvas>
+  <div class="vignette"></div>
+
+  <div class="terminal-window">
+    
+    <header class="terminal-header">
+      <div class="header-left">
+        <span class="blinking-dot"></span>
+        <span class="arcade-font header-title">root&#64;pixelstack:~/tests</span>
+      </div>
+      
+      @if (gameState() === 'PLAYING') {
+        <div class="live-stats arcade-font">
+          <div class="stat">
+            <span class="label">TIME:</span>
+            <span class="value" [class.danger]="timeLeft() <= 10">{{ timeLeft() }}s</span>
+          </div>
+          <div class="stat">
+            <span class="label">WPM:</span>
+            <span class="value highlight">{{ hasStartedTyping() ? wpm() : 0 }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">ACC:</span>
+            <span class="value">{{ hasStartedTyping() ? accuracy() : 100 }}%</span>
+          </div>
+        </div>
+      }
+    </header>
+
+    <div class="terminal-body">
+      
+      @if (gameState() === 'START') {
+        <div class="start-screen center-content">
+          <h1 class="arcade-font glitch-text" data-text="CODER's SPEED TEST">CODER'S SPEED TEST</h1>
+          <p class="arcade-font sub-text">> 60 SECOND RAW WPM CALCULATION.</p>
+          <p class="arcade-font sub-text">> ACTUAL SYNTAX. REAL CONDITIONS.</p>
+          <div class="btn-group">
+            <button class="hack-btn arcade-font" (click)="startGame()">[ INITIALIZE ]</button>
+            <button class="hack-btn secondary arcade-font" (click)="showLeaderboard()">[ RANKINGS ]</button>
+          </div>
+        </div>
+      }
+
+      @if (gameState() === 'PLAYING') {
+        <div class="typing-area arcade-font">
+          @if (!hasStartedTyping()) {
+            <div class="start-prompt absolute-center">START TYPING TO BEGIN...</div>
+          }
+          
+          <div class="code-block" [class.blurred]="!hasStartedTyping()">
+            @for (charData of textData(); track $index) {
+              @if (charData.expected === '\n') {
+                <span class="line-break" [class.active-cursor]="currentIndex() === $index">⏎</span><br>
+              } @else {
+                <span class="char" [ngClass]="charData.state" [class.active-cursor]="currentIndex() === $index">
+                  {{ charData.expected }}
+                </span>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      @if (gameState() === 'GAMEOVER') {
+        <div class="results-screen center-content">
+          <h2 class="arcade-font">TEST CONCLUDED</h2>
+          
+          <div class="final-stats">
+            <div class="f-stat box-blue">
+              <span class="f-label arcade-font">WPM</span>
+              <span class="f-value arcade-font">{{ wpm() }}</span>
+            </div>
+            <div class="f-stat box-green">
+              <span class="f-label arcade-font">ACCURACY</span>
+              <span class="f-value arcade-font">{{ accuracy() }}%</span>
+            </div>
+            <div class="f-stat box-red">
+              <span class="f-label arcade-font">KEYSTROKES</span>
+              <span class="f-value arcade-font">{{ totalTyped() }}</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="hack-btn arcade-font" (click)="startGame()">[ RETRY ]</button>
+            <button class="hack-btn secondary arcade-font" (click)="showLeaderboard()">[ RANKINGS ]</button>
+          </div>
+        </div>
+      }
+
+      @if (gameState() === 'LEADERBOARD') {
+        <div class="leaderboard-screen center-content">
+          <h2 class="arcade-font">GLOBAL MAINFRAME RANKINGS</h2>
+          
+          <table class="lb-table arcade-font">
+            <thead>
+              <tr>
+                <th>RANK</th>
+                <th>HACKER</th>
+                <th>WPM</th>
+                <th>ACCURACY</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of leaderboard(); track $index) {
+                <tr>
+                  <td>{{ $index + 1 }}</td>
+                  <td class="hacker-name">{{ entry.name }}</td>
+                  <td class="highlight-blue">{{ entry.wpm }}</td>
+                  <td [ngClass]="{'good-acc': entry.accuracy >= 95, 'bad-acc': entry.accuracy < 90}">{{ entry.accuracy }}%</td>
+                </tr>
+              }
+              @if (leaderboard().length === 0) {
+                <tr><td colspan="4">NO RECORDS FOUND IN DATABANKS.</td></tr>
+              }
+            </tbody>
+          </table>
+
+          <button class="hack-btn secondary arcade-font mt-2" (click)="gameState.set('START')">[ RETURN TO TERMINAL ]</button>
+        </div>
+      }
+      
+    </div>
+  </div>
+</main>

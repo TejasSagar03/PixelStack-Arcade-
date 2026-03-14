@@ -6,8 +6,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/hub/hub.component').then(m => m.HubComponent),
     title: 'PixelStack | Arcade Hub'
   },
-  
-  // NEW: Add the Auth Route here
+
   {
     path: 'auth',
     loadComponent: () => import('./components/auth/auth.component').then(m => m.AuthComponent),
@@ -29,6 +28,25 @@ export const routes: Routes = [
     loadComponent: () => import('./features/uno/uno.component').then(m => m.UnoComponent),
     title: 'PixelStack | UNO'
   },
+  
+  { 
+    path: 'racing', 
+    loadComponent: () => import('./features/racing/racing.component').then(m => m.RacingComponent),
+    title: 'PixelStack | Neon Drifter'
+  },
+
+  { 
+    path: 'typing', 
+    loadComponent: () => import('./features/typing/typing.component').then(m => m.TypingComponent),
+    title: 'PixelStack | Terminal Hack'
+  },
+
+  { 
+    path: 'shinobi', 
+    loadComponent: () => import('./features/shinobi/shinobi.component').then(m => m.ShinobiComponent),
+    title: 'PixelStack | Shinobi Dash'
+  },
+
   { 
     path: '**', 
     redirectTo: '' 
