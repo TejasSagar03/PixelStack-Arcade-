@@ -7,12 +7,7 @@ interface CharData {
   state: 'pending' | 'correct' | 'incorrect';
 }
 
-interface LeaderboardEntry {
-  name: string;
-  wpm: number;
-  accuracy: number;
-  date: string;
-}
+interface LeaderboardEntry { name: string; wpm: number; accuracy: number; date: string; }
 
 @Component({
   selector: 'app-typing',
@@ -23,28 +18,27 @@ interface LeaderboardEntry {
 })
 export class TypingComponent implements AfterViewInit, OnDestroy {
   @ViewChild('matrixCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  // ADDED: Reference to our new invisible mobile input
+  @ViewChild('mobileInput', { static: false }) mobileInputRef?: ElementRef<HTMLInputElement>;
+  
   private ctx!: CanvasRenderingContext2D;
   private matrixInterval: any;
   private timerInterval: any;
 
   Math = Math;
 
-  // Game State
   gameState = signal<'START' | 'PLAYING' | 'GAMEOVER' | 'LEADERBOARD'>('START');
   timeLimit = 60; 
   timeLeft = signal<number>(this.timeLimit);
   hasStartedTyping = signal<boolean>(false);
   
-  // Typing Data
   textData = signal<CharData[]>([]);
   currentIndex = signal<number>(0);
   
-  // Stats & Leaderboard
   correctChars = signal<number>(0);
   totalTyped = signal<number>(0);
   leaderboard = signal<LeaderboardEntry[]>([]);
 
-  // Audio Context
   private audioCtx: AudioContext | null = null;
 
   wpm = computed(() => {
@@ -65,66 +59,79 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
     "@keyframes glitch-anim {\n  0% { clip-path: inset(20% 0 80% 0); }\n  20% { clip-path: inset(60% 0 10% 0); }\n  40% { clip-path: inset(40% 0 50% 0); }\n  60% { clip-path: inset(80% 0 5% 0); }\n  100% { clip-path: inset(10% 0 70% 0); }\n}"
   ];
 
-  ngAfterViewInit() {
-    this.initMatrix();
-    this.loadLeaderboard();
-  }
+  ngAfterViewInit() { this.initMatrix(); this.loadLeaderboard(); }
 
-  ngOnDestroy() {
-    clearInterval(this.matrixInterval);
-    clearInterval(this.timerInterval);
-    if (this.audioCtx) this.audioCtx.close();
-  }
+  ngOnDestroy() { clearInterval(this.matrixInterval); clearInterval(this.timerInterval); if (this.audioCtx) this.audioCtx.close(); }
 
-  // Initialize Audio Context on user interaction to bypass browser autoplay policies
   private initAudio() {
-    if (!this.audioCtx) {
-      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+    if (!this.audioCtx) this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
   }
 
-  @HostListener('window:keydown', ['$event'])
-  handleKeyDown(e: KeyboardEvent) {
+  // --- MOBILE KEYBOARD INTERCEPTOR ---
+  onMobileInput(event: Event) {
     if (this.gameState() !== 'PLAYING') return;
-
-    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-      return;
-    }
+    const inputElement = event.target as HTMLInputElement;
+    const inputType = (event as InputEvent).inputType;
+    const value = inputElement.value;
 
     if (!this.hasStartedTyping()) {
       this.hasStartedTyping.set(true);
       this.startTimer();
     }
 
+    // Detect Backspace on Mobile
+    if (inputType === 'deleteContentBackward') {
+      this.handleBackspace();
+    } else if (value.length > 0) {
+      // Capture the very last typed character
+      const char = value.charAt(value.length - 1);
+      this.processTyping(char);
+    }
+    
+    // Clear the input so it doesn't build up text
+    inputElement.value = ''; 
+  }
+
+  // Helper method to keep the hidden mobile keyboard open
+  focusMobileKeyboard() {
+    if (this.mobileInputRef) this.mobileInputRef.nativeElement.focus();
+  }
+
+  // --- DESKTOP KEYBOARD ---
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(e: KeyboardEvent) {
+    if (this.gameState() !== 'PLAYING') return;
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+
+    if (!this.hasStartedTyping()) { this.hasStartedTyping.set(true); this.startTimer(); }
+
     if (e.key === 'Backspace') {
-      if (this.currentIndex() > 0) {
-        this.currentIndex.update(i => i - 1);
-        this.textData.update(data => {
-          const newData = [...data];
-          newData[this.currentIndex()].state = 'pending';
-          newData[this.currentIndex()].typed = null;
-          return newData;
-        });
-        this.triggerHaptic(5);
-        this.playSound('backspace'); // Play backspace sound
-      }
+      this.handleBackspace();
       return;
     }
-
     if (e.key === ' ') e.preventDefault();
-
     this.processTyping(e.key);
+  }
+
+  private handleBackspace() {
+    if (this.currentIndex() > 0) {
+      this.currentIndex.update(i => i - 1);
+      this.textData.update(data => {
+        const newData = [...data];
+        newData[this.currentIndex()].state = 'pending';
+        newData[this.currentIndex()].typed = null;
+        return newData;
+      });
+      this.triggerHaptic(5);
+      this.playSound('backspace');
+    }
   }
 
   private processTyping(key: string) {
     const index = this.currentIndex();
     const data = this.textData();
-
-    if (index >= data.length) {
-      this.endGame();
-      return;
-    }
+    if (index >= data.length) { this.endGame(); return; }
 
     const expectedChar = data[index].expected;
     const isCorrect = key === expectedChar;
@@ -141,75 +148,47 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
 
     this.currentIndex.update(i => i + 1);
 
-    // Play appropriate sound and haptic feedback
-    if (!isCorrect) {
-      this.triggerHaptic([20, 20]);
-      this.playSound('error');
-    } else {
-      this.triggerHaptic(5);
-      this.playSound('click');
-    }
+    if (!isCorrect) { this.triggerHaptic([20, 20]); this.playSound('error'); } 
+    else { this.triggerHaptic(5); this.playSound('click'); }
 
-    if (this.currentIndex() === data.length) {
-      this.endGame();
-    }
+    if (this.currentIndex() === data.length) this.endGame();
   }
 
   startGame() {
-    this.initAudio(); // Wake up the audio engine
+    this.initAudio(); 
     this.gameState.set('PLAYING');
     this.timeLeft.set(this.timeLimit);
     this.hasStartedTyping.set(false);
-    this.correctChars.set(0);
-    this.totalTyped.set(0);
-    this.currentIndex.set(0);
-    
+    this.correctChars.set(0); this.totalTyped.set(0); this.currentIndex.set(0);
     clearInterval(this.timerInterval);
 
     const randomSnippet = this.snippets[Math.floor(Math.random() * this.snippets.length)];
-    const parsedData: CharData[] = randomSnippet.split('').map(char => ({
-      expected: char,
-      typed: null,
-      state: 'pending'
-    }));
-    
+    const parsedData: CharData[] = randomSnippet.split('').map(char => ({ expected: char, typed: null, state: 'pending' }));
     this.textData.set(parsedData);
+
+    // Auto-focus mobile keyboard when game starts
+    setTimeout(() => this.focusMobileKeyboard(), 100);
   }
 
   private startTimer() {
     this.timerInterval = setInterval(() => {
       this.timeLeft.update(t => t - 1);
-      if (this.timeLeft() <= 0) {
-        this.endGame();
-      }
+      if (this.timeLeft() <= 0) this.endGame();
     }, 1000);
   }
 
   private endGame() {
-    clearInterval(this.timerInterval);
-    this.playSound('finish'); // Play completion sound
-    this.saveToLeaderboard();
-    this.gameState.set('GAMEOVER');
+    clearInterval(this.timerInterval); this.playSound('finish'); this.saveToLeaderboard(); this.gameState.set('GAMEOVER');
   }
 
-  // --- LEADERBOARD LOGIC ---
   private loadLeaderboard() {
     const saved = localStorage.getItem('pixelstack-typing-wpm');
-    if (saved) {
-      this.leaderboard.set(JSON.parse(saved));
-    }
+    if (saved) this.leaderboard.set(JSON.parse(saved));
   }
 
   private saveToLeaderboard() {
     if (this.totalTyped() === 0) return;
-    
-    const newEntry: LeaderboardEntry = {
-      name: 'GUEST_HACKER',
-      wpm: this.wpm(),
-      accuracy: this.accuracy(),
-      date: new Date().toLocaleDateString()
-    };
-
+    const newEntry: LeaderboardEntry = { name: 'GUEST_HACKER', wpm: this.wpm(), accuracy: this.accuracy(), date: new Date().toLocaleDateString() };
     this.leaderboard.update(lb => {
       const updated = [...lb, newEntry].sort((a, b) => b.wpm - a.wpm).slice(0, 10);
       localStorage.setItem('pixelstack-typing-wpm', JSON.stringify(updated));
@@ -217,26 +196,17 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  showLeaderboard() {
-    this.gameState.set('LEADERBOARD');
-  }
+  showLeaderboard() { this.gameState.set('LEADERBOARD'); }
 
   private initMatrix() {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx = canvas.getContext('2d')!;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const canvas = this.canvasRef.nativeElement; this.ctx = canvas.getContext('2d')!;
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
-    const fontSize = 14;
-    const columns = canvas.width / fontSize;
-    const drops: number[] = [];
-    for(let x = 0; x < columns; x++) drops[x] = 1;
-
+    const fontSize = 14; const columns = canvas.width / fontSize;
+    const drops: number[] = []; for(let x = 0; x < columns; x++) drops[x] = 1;
     this.matrixInterval = setInterval(() => {
-      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-      this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-      this.ctx.fillStyle = '#0f0';
-      this.ctx.font = fontSize + 'px monospace';
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+      this.ctx.fillStyle = '#0f0'; this.ctx.font = fontSize + 'px monospace';
       for(let i = 0; i < drops.length; i++) {
         const text = chars.charAt(Math.floor(Math.random() * chars.length));
         this.ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -246,57 +216,17 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
     }, 33);
   }
 
-  private triggerHaptic(pattern: number | number[]) {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern);
-  }
+  private triggerHaptic(pattern: number | number[]) { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern); }
 
-  // --- RETRO KEYBOARD AUDIO SYNTHESIZER ---
   private playSound(type: 'click' | 'error' | 'backspace' | 'finish') {
     if (!this.audioCtx) return;
     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+    const now = this.audioCtx.currentTime; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain();
+    osc.connect(gain); gain.connect(this.audioCtx.destination);
     
-    const now = this.audioCtx.currentTime;
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-    
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-    
-    if (type === 'click') {
-      // Very short, crisp "tick" similar to a mechanical switch
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, now);
-      osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
-      osc.start(now);
-      osc.stop(now + 0.03);
-    } else if (type === 'error') {
-      // Harsh, low "thud" for a mistake
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.15);
-      osc.start(now);
-      osc.stop(now + 0.15);
-    } else if (type === 'backspace') {
-      // Slightly different, hollow tick for backspace
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(400, now);
-      osc.frequency.exponentialRampToValueAtTime(200, now + 0.04);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } else if (type === 'finish') {
-      // Satisfying completion chime
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.setValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.1, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.4);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    }
+    if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.03); gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03); osc.start(now); osc.stop(now + 0.03); }
+    else if (type === 'error') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
+    else if (type === 'backspace') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.04); gain.gain.setValueAtTime(0.06, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04); osc.start(now); osc.stop(now + 0.04); }
+    else if (type === 'finish') { osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(880, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4); osc.start(now); osc.stop(now + 0.4); }
   }
 }

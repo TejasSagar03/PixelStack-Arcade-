@@ -54,14 +54,16 @@
     }
   </div>
 
-  <div class="mobile-controls">
-    <div class="d-pad">
-      <button class="control-btn" (touchstart)="setKey('Left', true)" (touchend)="setKey('Left', false)">◀</button>
-      <button class="control-btn" (touchstart)="setKey('Right', true)" (touchend)="setKey('Right', false)">▶</button>
+  @if (gameState() === 'PLAYING') {
+    <div class="mobile-controls">
+      <div class="control-row">
+        <button class="d-btn" (touchstart)="mobileControl('left', true, $event)" (touchend)="mobileControl('left', false, $event)" (contextmenu)="$event.preventDefault()">◀</button>
+        <button class="d-btn" (touchstart)="mobileControl('right', true, $event)" (touchend)="mobileControl('right', false, $event)" (contextmenu)="$event.preventDefault()">▶</button>
+      </div>
+      <div class="control-row action">
+        <button class="action-btn" (touchstart)="mobileControl('fire', true, $event)" (touchend)="mobileControl('fire', false, $event)" (contextmenu)="$event.preventDefault()">FIRE</button>
+        <button class="action-btn nitro" (touchstart)="mobileControl('nitro', true, $event)" (touchend)="mobileControl('nitro', false, $event)" (contextmenu)="$event.preventDefault()">N2O</button>
+      </div>
     </div>
-    <div class="action-pad">
-      <button class="control-btn action-btn nitro-btn" (touchstart)="setKey('Shift', true)" (touchend)="setKey('Shift', false)">N2O</button>
-      <button class="control-btn action-btn fire-btn" (touchstart)="setKey('Space', true)" (touchend)="setKey('Space', false)">FIRE</button>
-    </div>
-  </div>
+  }
 </main>

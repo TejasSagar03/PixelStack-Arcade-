@@ -25,7 +25,6 @@
 
 .game-header { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; margin-bottom: 1rem; gap: 0.5rem; }
 
-/* NEW HEADER TOP FOR PAUSE BUTTON */
 .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 .title { font-size: 1.8rem; color: #00ffaa; text-shadow: 0 0 10px #00ffaa; margin: 0; }
 
@@ -60,15 +59,31 @@
 .danger-text { color: #ff003c; text-shadow: 0 0 15px #ff003c; margin-bottom: 10px; }
 .sub-text { color: #aaa; margin: 5px 0; font-size: 0.9rem; }
 
-.mobile-controls { display: flex; justify-content: space-between; width: 100%; max-width: 400px; margin-top: 1rem; gap: 10px; }
-.d-pad, .action-pad { display: flex; gap: 10px; flex: 1; }
-.control-btn {
-  flex: 1; padding: 1rem; background: #111; border: 2px solid #00ffaa; color: #00ffaa; border-radius: 8px; font-size: 1.5rem;
-  display: flex; justify-content: center; align-items: center;
-  &:active { background: #00ffaa; color: #000; }
-  &.action-btn { font-size: 1rem; font-weight: bold; font-family: 'Orbitron', sans-serif; }
-  &.nitro-btn { border-color: #00f0ff; color: #00f0ff; &:active { background: #00f0ff; color: #000; } }
-  &.fire-btn { border-color: #ff003c; color: #ff003c; &:active { background: #ff003c; color: #fff; } }
+/* --- MOBILE ON-SCREEN CONTROLS --- */
+.mobile-controls {
+  display: none;
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 0;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+
+  .control-row { display: flex; gap: 10px; }
+  
+  button {
+    background: rgba(0, 255, 170, 0.1); border: 2px solid #00ffaa; color: #00ffaa;
+    height: 60px; border-radius: 8px; font-weight: 900; font-family: 'Orbitron', sans-serif;
+    user-select: none; touch-action: manipulation;
+    display: flex; justify-content: center; align-items: center;
+    &:active { background: #00ffaa; color: #000; }
+  }
+
+  .d-btn { width: 60px; font-size: 1.5rem; }
+  .action-btn { width: 80px; font-size: 1.1rem; &.nitro { border-color: #00f0ff; color: #00f0ff; &:active { background: #00f0ff; color: #000;} } }
 }
 
-@media (min-width: 768px) { .mobile-controls { display: none; } }
+@media (max-width: 768px) {
+  .mobile-controls { display: flex; }
+  .canvas-wrapper { height: 60vh; } /* Shrink canvas slightly on phones to fit controls */
+}

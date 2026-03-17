@@ -44,21 +44,25 @@
       }
 
       @if (gameState() === 'PLAYING') {
-        <div class="typing-area arcade-font">
-          @if (!hasStartedTyping()) {
-            <div class="start-prompt absolute-center">START TYPING TO BEGIN...</div>
-          }
+        <div class="typing-container" (click)="focusMobileKeyboard()">
+          <input #mobileInput type="text" class="mobile-ghost-input" (input)="onMobileInput($event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           
-          <div class="code-block" [class.blurred]="!hasStartedTyping()">
-            @for (charData of textData(); track $index) {
-              @if (charData.expected === '\n') {
-                <span class="line-break" [class.active-cursor]="currentIndex() === $index">⏎</span><br>
-              } @else {
-                <span class="char" [ngClass]="charData.state" [class.active-cursor]="currentIndex() === $index">
-                  {{ charData.expected }}
-                </span>
-              }
+          <div class="typing-area arcade-font">
+            @if (!hasStartedTyping()) {
+              <div class="start-prompt absolute-center">START TYPING TO BEGIN...</div>
             }
+            
+            <div class="code-block" [class.blurred]="!hasStartedTyping()">
+              @for (charData of textData(); track $index) {
+                @if (charData.expected === '\n') {
+                  <span class="line-break" [class.active-cursor]="currentIndex() === $index">⏎</span><br>
+                } @else {
+                  <span class="char" [ngClass]="charData.state" [class.active-cursor]="currentIndex() === $index">
+                    {{ charData.expected }}
+                  </span>
+                }
+              }
+            </div>
           </div>
         </div>
       }

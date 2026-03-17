@@ -1,59 +1,114 @@
 <main class="game-container">
+  
   @if (gameState() === 'SELECT_HERO' || gameState() === 'SELECT_BOSS') {
     <div class="selection-screen">
       <header class="phase-header">
-        <h1 class="arcade-font">{{ gameState() === 'SELECT_HERO' ? 'SELECT NINJA' : 'SELECT TARGET' }}</h1>
+        <h1 class="anime-title">{{ gameState() === 'SELECT_HERO' ? 'SELECT NINJA' : 'SELECT TARGET' }}</h1>
       </header>
+
       @if (gameState() === 'SELECT_HERO') {
-        <div class="roster-grid">
-          @for (h of heroes; track h.id) {
-            <div class="roster-card" [class.selected]="selectedHero()?.id === h.id" [style.--theme-color]="h.color" (click)="selectHero(h)">
+        <div class="roster-grid heroes">
+          @for (hero of heroes; track hero.id) {
+            <div class="roster-card" 
+                 [class.selected]="selectedHero()?.id === hero.id"
+                 [style.--theme-color]="hero.color"
+                 (click)="selectHero(hero)">
               <div class="card-inner">
-                <h2 class="arcade-font">{{ h.name }}</h2>
-                <p>{{ h.special }}</p>
+                <h2 class="arcade-font">{{ hero.name }}</h2>
+                <div class="abilities">
+                  <div class="stat"><span>ULTIMATE:</span> {{ hero.special }}</div>
+                </div>
               </div>
             </div>
           }
         </div>
-        <button class="action-btn primary arcade-font" [disabled]="!selectedHero()" (click)="confirmHero()">NEXT ➔</button>
+        <div class="action-footer">
+          <button class="action-btn primary arcade-font" [disabled]="!selectedHero()" (click)="confirmHero()">CONFIRM ➔</button>
+        </div>
       }
+
       @if (gameState() === 'SELECT_BOSS') {
-        <div class="roster-grid">
-          @for (b of bosses; track b.id) {
-            <div class="roster-card" [class.selected]="selectedBoss()?.id === b.id" [style.--theme-color]="b.color" (click)="selectBoss(b)">
+        <div class="roster-grid bosses">
+          @for (boss of bosses; track boss.id) {
+            <div class="roster-card" 
+                 [class.selected]="selectedBoss()?.id === boss.id"
+                 [style.--theme-color]="boss.color"
+                 (click)="selectBoss(boss)">
               <div class="card-inner">
-                <h2 class="arcade-font">{{ b.name }}</h2>
-                <p>{{ b.special }}</p>
+                <h2 class="arcade-font">{{ boss.name }}</h2>
+                <div class="abilities">
+                  <div class="stat"><span>HAZARD:</span> {{ boss.special }}</div>
+                </div>
               </div>
             </div>
           }
         </div>
         <div class="action-footer split">
           <button class="action-btn secondary arcade-font" (click)="goBack()">BACK</button>
-          <button class="action-btn danger arcade-font" [disabled]="!selectedBoss()" (click)="startGame()">DEPLOY</button>
+          <button class="action-btn danger arcade-font" [disabled]="!selectedBoss()" (click)="startGame()">START RUN</button>
         </div>
       }
     </div>
   }
 
-  @if (gameState() === 'PLAYING' || gameState() === 'GAMEOVER') {
+  @if (gameState() === 'LOADING') {
+    <div class="loading-screen center-content">
+      <h2 class="arcade-font loading-text">
+        <span [style.color]="selectedHero()?.color">{{ selectedHero()?.name }}</span> 
+        <span class="vs">VS</span> 
+        <span [style.color]="selectedBoss()?.color">{{ selectedBoss()?.name }}</span>
+      </h2>
+      <p class="arcade-font blink">INITIALIZING CHAKRA NETWORK...</p>
+    </div>
+  }
+
+  @if (gameState() === 'PLAYING' || gameState() === 'GAMEOVER' || gameState() === 'PAUSED') {
     <div class="engine-wrapper">
       <header class="hud arcade-font">
         <div class="chakra-panel">
+          <span>CHAKRA</span>
           <div class="chakra-bar"><div class="chakra-fill" [style.width.%]="chakra()" [style.background]="selectedHero()?.color"></div></div>
-          @if (chakra() >= 100) { <span class="blink">READY! [SHIFT]</span> }
+          @if (chakra() >= 100) { <span class="blink" style="color:#00f0ff">JUTSU READY [TAP]</span> }
         </div>
-        <div class="score">DISTANCE: {{ Math.floor(distance()) }}M</div>
+        <div class="hud-right">
+          <div class="score">{{ Math.floor(distance()) }}M</div>
+          @if (gameState() === 'PLAYING' || gameState() === 'PAUSED') {
+            <button class="pause-btn arcade-font" (click)="togglePause()">
+              {{ gameState() === 'PAUSED' ? '▶' : '||' }}
+            </button>
+          }
+        </div>
       </header>
-      <div class="canvas-container">
+
+      <div class="canvas-container" 
+           [class.shake]="gameState() === 'GAMEOVER'"
+           (touchstart)="onTouchStart($event)" 
+           (touchend)="onTouchEnd($event)">
+        
+        <div class="anime-background"></div>
+        <div class="speed-lines" [class.active]="isSpecialActive()"></div>
+
         <canvas #gameCanvas width="800" height="400"></canvas>
+        
+        @if (gameState() === 'PAUSED') {
+          <div class="game-over-modal pause-modal">
+            <h1 class="anime-title" style="color: #fff;">PAUSED</h1>
+            <button class="action-btn primary arcade-font" (click)="togglePause()">RESUME</button>
+            <button class="action-btn secondary arcade-font" (click)="gameState.set('SELECT_HERO')">QUIT</button>
+          </div>
+        }
+
         @if (gameState() === 'GAMEOVER') {
           <div class="game-over-modal">
-            <h1 class="arcade-font">WASTED</h1>
+            <h1 class="anime-title" style="color: #ff003c;">DEFEATED</h1>
             <button class="action-btn primary arcade-font" (click)="startGame()">RETRY</button>
             <button class="action-btn secondary arcade-font" (click)="gameState.set('SELECT_HERO')">QUIT</button>
           </div>
         }
+      </div>
+      <div class="controls-legend arcade-font">
+        <span>[SWIPE] MOVE/JUMP</span>
+        <span>[TAP] JUTSU</span>
       </div>
     </div>
   }
