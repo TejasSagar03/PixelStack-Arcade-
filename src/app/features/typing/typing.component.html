@@ -45,7 +45,7 @@
 
       @if (gameState() === 'PLAYING') {
         <div class="typing-container" (click)="focusMobileKeyboard()">
-          <input #mobileInput type="text" class="mobile-ghost-input" (input)="onMobileInput($event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <input #mobileInput type="text" class="mobile-ghost-input" (input)="onMobileInput($event)" autocomplete="off" spellcheck="false">
           
           <div class="typing-area arcade-font">
             @if (!hasStartedTyping()) {

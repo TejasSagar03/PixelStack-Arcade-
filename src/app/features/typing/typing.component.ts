@@ -18,7 +18,6 @@ interface LeaderboardEntry { name: string; wpm: number; accuracy: number; date: 
 })
 export class TypingComponent implements AfterViewInit, OnDestroy {
   @ViewChild('matrixCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
-  // ADDED: Reference to our new invisible mobile input
   @ViewChild('mobileInput', { static: false }) mobileInputRef?: ElementRef<HTMLInputElement>;
   
   private ctx!: CanvasRenderingContext2D;
@@ -39,7 +38,7 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
   totalTyped = signal<number>(0);
   leaderboard = signal<LeaderboardEntry[]>([]);
 
-  private audioCtx: AudioContext | null = null;
+  private audioCtx: any = null;
 
   wpm = computed(() => {
     const minutesElapsed = (this.timeLimit - this.timeLeft()) / 60;
@@ -64,45 +63,59 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() { clearInterval(this.matrixInterval); clearInterval(this.timerInterval); if (this.audioCtx) this.audioCtx.close(); }
 
   private initAudio() {
-    if (!this.audioCtx) this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+    if (!this.audioCtx) {
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) this.audioCtx = new AudioContextClass();
+    }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
   }
 
-  // --- MOBILE KEYBOARD INTERCEPTOR ---
+  // FORCE KEYBOARD OPEN WHEN CLICKING ANYWHERE
+  @HostListener('window:click')
+  handleWindowClick() {
+    if (this.gameState() === 'PLAYING') this.focusMobileKeyboard();
+  }
+
+  // --- 1. THE MOBILE INPUT FIX ---
   onMobileInput(event: Event) {
     if (this.gameState() !== 'PLAYING') return;
     const inputElement = event.target as HTMLInputElement;
-    const inputType = (event as InputEvent).inputType;
+    const inputType = (event as any).inputType; 
     const value = inputElement.value;
 
-    if (!this.hasStartedTyping()) {
-      this.hasStartedTyping.set(true);
-      this.startTimer();
-    }
+    if (!this.hasStartedTyping()) { this.hasStartedTyping.set(true); this.startTimer(); }
 
-    // Detect Backspace on Mobile
     if (inputType === 'deleteContentBackward') {
       this.handleBackspace();
+    } else if (inputType === 'insertLineBreak') {
+      this.processTyping('\n'); 
     } else if (value.length > 0) {
-      // Capture the very last typed character
-      const char = value.charAt(value.length - 1);
-      this.processTyping(char);
+      // Loop handles whole words if mobile autocorrect injects a chunk!
+      for (let i = 0; i < value.length; i++) {
+        this.processTyping(value[i]);
+      }
     }
     
-    // Clear the input so it doesn't build up text
-    inputElement.value = ''; 
+    inputElement.value = ''; // Instantly clear to prevent buildup
   }
 
-  // Helper method to keep the hidden mobile keyboard open
   focusMobileKeyboard() {
     if (this.mobileInputRef) this.mobileInputRef.nativeElement.focus();
   }
 
-  // --- DESKTOP KEYBOARD ---
+  // --- 2. THE DESKTOP DOUBLE-FIRE FIX ---
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(e: KeyboardEvent) {
     if (this.gameState() !== 'PLAYING') return;
-    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    
+    // Ignore modifiers
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+
+    // If on Mobile, the keyboard sends 'Unidentified' or 229. We ignore it here so onMobileInput handles it perfectly!
+    if (e.key === 'Unidentified' || e.keyCode === 229) return;
+
+    // PREVENT DEFAULT! This stops the Desktop browser from sending the key to the hidden input, killing the double-fire bug!
+    e.preventDefault(); 
 
     if (!this.hasStartedTyping()) { this.hasStartedTyping.set(true); this.startTimer(); }
 
@@ -110,24 +123,42 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
       this.handleBackspace();
       return;
     }
-    if (e.key === ' ') e.preventDefault();
-    this.processTyping(e.key);
+    
+    const keyToProcess = e.key === 'Enter' ? '\n' : e.key;
+    this.processTyping(keyToProcess);
   }
 
+  // --- 3. SMART BACKSPACE ---
   private handleBackspace() {
     if (this.currentIndex() > 0) {
-      this.currentIndex.update(i => i - 1);
-      this.textData.update(data => {
-        const newData = [...data];
-        newData[this.currentIndex()].state = 'pending';
-        newData[this.currentIndex()].typed = null;
+      let stepsBack = 1;
+      const data = this.textData();
+      
+      // If we are backspacing into an Auto-Indent, delete all the spaces at once!
+      if (data[this.currentIndex() - 1].expected === ' ' && data[this.currentIndex() - 1].typed === ' ') {
+         let tempIdx = this.currentIndex() - 1;
+         let spaceCount = 0;
+         while (tempIdx >= 0 && data[tempIdx].expected === ' ') { spaceCount++; tempIdx--; }
+         if (tempIdx >= 0 && data[tempIdx].expected === '\n') stepsBack = spaceCount;
+      }
+
+      this.currentIndex.update(i => i - stepsBack);
+      
+      this.textData.update(d => {
+        const newData = [...d];
+        for(let i = 0; i < stepsBack; i++) {
+           newData[this.currentIndex() + i].state = 'pending';
+           newData[this.currentIndex() + i].typed = null;
+        }
         return newData;
       });
+      
       this.triggerHaptic(5);
       this.playSound('backspace');
     }
   }
 
+  // --- 4. AUTO-INDENT FIX ---
   private processTyping(key: string) {
     const index = this.currentIndex();
     const data = this.textData();
@@ -148,10 +179,34 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
 
     this.currentIndex.update(i => i + 1);
 
-    if (!isCorrect) { this.triggerHaptic([20, 20]); this.playSound('error'); } 
-    else { this.triggerHaptic(5); this.playSound('click'); }
+    if (!isCorrect) { 
+      this.triggerHaptic([20, 20]); this.playSound('error'); 
+    } else { 
+      this.triggerHaptic(5); this.playSound('click'); 
+      
+      // AUTO-INDENT: If you correctly hit Enter, auto-fill the spaces on the next line!
+      if (expectedChar === '\n') {
+         let nextIdx = this.currentIndex();
+         let spacesToSkip = 0;
+         while (nextIdx < data.length && data[nextIdx].expected === ' ') { spacesToSkip++; nextIdx++; }
+         
+         if (spacesToSkip > 0) {
+           this.textData.update(d => {
+             const newData = [...d];
+             for(let s = 0; s < spacesToSkip; s++) {
+               newData[this.currentIndex() + s].typed = ' ';
+               newData[this.currentIndex() + s].state = 'correct';
+             }
+             return newData;
+           });
+           this.currentIndex.update(i => i + spacesToSkip);
+           this.correctChars.update(c => c + spacesToSkip);
+           this.totalTyped.update(t => t + spacesToSkip);
+         }
+      }
+    }
 
-    if (this.currentIndex() === data.length) this.endGame();
+    if (this.currentIndex() >= data.length) this.endGame();
   }
 
   startGame() {
@@ -166,7 +221,6 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
     const parsedData: CharData[] = randomSnippet.split('').map(char => ({ expected: char, typed: null, state: 'pending' }));
     this.textData.set(parsedData);
 
-    // Auto-focus mobile keyboard when game starts
     setTimeout(() => this.focusMobileKeyboard(), 100);
   }
 
@@ -216,7 +270,9 @@ export class TypingComponent implements AfterViewInit, OnDestroy {
     }, 33);
   }
 
-  private triggerHaptic(pattern: number | number[]) { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern); }
+  private triggerHaptic(pattern: number | number[]) { 
+    if (typeof navigator !== 'undefined' && (navigator as any).vibrate) (navigator as any).vibrate(pattern);
+  }
 
   private playSound(type: 'click' | 'error' | 'backspace' | 'finish') {
     if (!this.audioCtx) return;
